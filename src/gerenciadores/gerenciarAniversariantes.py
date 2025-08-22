@@ -67,3 +67,20 @@ class gerenciadorAniversariantes:
 
         logging.info(f"Encontrados {len(aniversariantes_df)} aniversariantes de tempo de empresa para o dia {hoje.strftime('%d/%m')}.")
         return aniversariantes_df
+
+    def identificar_aniversariantes_de_nascimento_do_dia(self, df_validos, data_simulada=None):
+        """Filtra o DataFrame para encontrar aniversariantes de nascimento no dia atual."""
+        logging.info("Identificando aniversariantes de nascimento do dia.")
+
+        hoje = data_simulada if data_simulada else datetime.now()
+        dia = hoje.day
+        mes = hoje.month
+
+        # Filtra por dia e mês de nascimento
+        aniversariantes_df = df_validos[
+            (pd.to_datetime(df_validos['Data de Nascimento']).dt.day == dia) &
+            (pd.to_datetime(df_validos['Data de Nascimento']).dt.month == mes)
+        ].copy()
+
+        logging.info(f"Encontrados {len(aniversariantes_df)} aniversariantes de nascimento para o dia {hoje.strftime('%d/%m')}.")
+        return aniversariantes_df

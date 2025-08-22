@@ -200,4 +200,43 @@ class emailEmpresa:
             assunto = f"🎉 Aniversariantes de Tempo de Empresa - {hoje_str}"
             destinatarios = [EMAIL_TESTE] if AMBIENTE == "QAS" else [email_gestor]
             self.conexaoGraph.enviar_email(destinatarios, assunto, body)
- 
+            
+    def enviar_email_aniversariante_nascimento(self, aniversariantes_df, data_simulada=None):
+        """Envia e-mails individuais para cada colaborador aniversariante de nascimento no dia."""
+        if aniversariantes_df.empty:
+            logging.info("Nenhum aniversariante de nascimento hoje.")
+            return
+
+        hoje = data_simulada if data_simulada else datetime.now()
+        hoje_str = hoje.strftime('%d/%m/%Y')
+
+        for _, row in aniversariantes_df.iterrows():
+            nome = self.utilitariosComuns.formatar_nome(row['Nome'])
+            email_pessoal = row.get('Email_pessoal', '')
+            email_corporativo = row.get('Email_corporativo', '')
+
+            destinatarios = []
+            if email_corporativo and not pd.isna(email_corporativo):
+                destinatarios.append(email_corporativo)
+            if email_pessoal and not pd.isna(email_pessoal):
+                destinatarios.append(email_pessoal)
+
+            if not destinatarios:
+                logging.warning(f"{nome} não possui e-mail válido cadastrado. Pulando envio.")
+                continue
+
+            subject = f"🎉 Feliz Aniversário, {nome}!"
+            saudacao = f"Olá, {nome}!"
+            mensagem = (
+                f"Hoje é o seu dia! 🎉\n\n"
+                f"Toda a equipe deseja a você um feliz aniversário, com muita saúde, paz e sucesso.\n"
+                f"Aproveite muito o seu dia!"
+            )
+            body = self.utilitariosComuns.gerar_corpo_email_aniversariantes(saudacao, mensagem, [], [])
+
+            logging.info(f"Enviando e-mail de feliz aniversário para {nome} ({', '.join(destinatarios)}).")
+            self.conexaoGraph.enviar_email(
+                [EMAIL_TESTE] if AMBIENTE == "QAS" else destinatarios,
+                subject,
+                body
+            )
