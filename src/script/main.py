@@ -96,4 +96,4 @@ class Main:
 if __name__ == "__main__":
     configurar_logs()
     main_app = Main()
-    main_app.executar()
+    main_app.executar() 
