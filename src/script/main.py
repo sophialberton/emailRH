@@ -15,11 +15,10 @@ from email_utils.emailEmpresa import emailEmpresa
 from utils.config import dict_extract
 from dotenv import load_dotenv, find_dotenv
 
-from datetime import datetime
-data_simulada = datetime.strptime("01/09/2025", "%d/%m/%Y")
+# Use a data atual para execução normal ou defina uma data para simulação
+# data_simulada = datetime.strptime("01/09/2025", "%d/%m/%Y")
+data_simulada = None # Descomente a linha acima e comente esta para simular
 
-
-# Configuração de logs
 def configurar_logs():
     log_directory = os.path.join(os.getcwd(), "Logs")
     os.makedirs(log_directory, exist_ok=True)
@@ -31,7 +30,7 @@ def configurar_logs():
         datefmt="%Y-%m-%d %H:%M:%S",
         handlers=[
             logging.FileHandler(log_filename),
-            logging.StreamHandler(sys.stdout) # Mostra logs no console também
+            logging.StreamHandler(sys.stdout)
         ],
         force=True
     )
@@ -41,7 +40,6 @@ def configurar_logs():
     logging.info(f"IPV4: {ip_local}")
     logging.info(f"HOST: {nome_host}")
 
-# Classe principal
 class Main:
     def __init__(self):
         """Inicializa as classes necessárias para a execução."""
@@ -54,43 +52,46 @@ class Main:
         """Orquestra a execução de todo o processo."""
         logging.info(">>> Iniciando processo de envio de e-mails.")
         
-        # 1. Conectar e buscar dados
-        self.conexao_senior.conexaoBancoSenior()
-        colaboradores_df = self.conexao_senior.consultaDadosSenior()
-
-        if colaboradores_df.empty:
-            logging.warning("Nenhum colaborador encontrado na consulta. Encerrando execucao.")
+        # 1. Tenta conectar ao banco de dados
+        if not self.conexao_senior.conexaoBancoSenior():
+            logging.error("Falha ao conectar no banco de dados. Encerrando execução.")
             return
 
-        # 2. Classificar colaboradores (válidos e inválidos)
-        resultados_classificacao = classificar_usuarios(colaboradores_df)
-        df_validos = resultados_classificacao['validos']
-        
-        logging.info(f"Total de registros validos para processamento: {len(df_validos)}")
-        
-        # 3. Identificar aniversariantes do próximo mês
-        aniversariantes_mes_seguinte_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte(df_validos)
+        try:
+            # 2. Busca e classifica os colaboradores
+            colaboradores_df = self.conexao_senior.consultaDadosSenior()
 
-        # 4. Enviar e-mails de tempo de empresa (mês seguinte)
-        if not aniversariantes_mes_seguinte_df.empty:
-            # Enviar e-mail único para o RH
-            self.email_empresa.enviar_email_rh(aniversariantes_mes_seguinte_df)
+            if colaboradores_df.empty:
+                logging.warning("Nenhum colaborador encontrado na consulta. Encerrando execucao.")
+                return
+
+            resultados_classificacao = classificar_usuarios(colaboradores_df)
+            df_validos = resultados_classificacao['validos']
+            logging.info(f"Total de registros validos para processamento: {len(df_validos)}")
             
-            # Enviar e-mails para cada gestor
-            self.email_empresa.enviar_emails_gestores(aniversariantes_mes_seguinte_df)
-        else:
-            logging.info("Nenhum aniversariante de tempo de empresa encontrado para o proximo mes.")
-            
-        # 5. Enviar e-mails no dia do aniversário de tempo de empresa
-        aniversariantes_do_dia_df = self.gerenciador_aniversariantes.identificar_aniversariantes_do_dia(df_validos, data_simulada)
-        self.email_empresa.enviar_email_individual_aniversariante(aniversariantes_do_dia_df, data_simulada)
-        self.email_empresa.enviar_email_diario_gestor_aniversariante(aniversariantes_do_dia_df, data_simulada)
+            # --- Lógica de Aniversário de Empresa ---
+            logging.info(">>> Processando aniversariantes de tempo de empresa...")
+            aniversariantes_mes_seguinte_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte(df_validos)
 
-        # 6. Enviar e-mails de aniversário de nascimento
-        aniversariantes_nascimento_do_dia_df = self.gerenciador_aniversariantes.identificar_aniversariantes_de_nascimento_do_dia(df_validos, data_simulada)
-        self.email_empresa.enviar_email_aniversariante_nascimento(aniversariantes_nascimento_do_dia_df, data_simulada)
+            if not aniversariantes_mes_seguinte_df.empty:
+                self.email_empresa.enviar_email_rh(aniversariantes_mes_seguinte_df)
+                self.email_empresa.enviar_emails_gestores(aniversariantes_mes_seguinte_df)
+            else:
+                logging.info("Nenhum aniversariante de tempo de empresa encontrado para o proximo mes.")
+                
+            aniversariantes_do_dia_df = self.gerenciador_aniversariantes.identificar_aniversariantes_do_dia(df_validos, data_simulada)
+            self.email_empresa.enviar_email_individual_aniversariante(aniversariantes_do_dia_df, data_simulada)
+            self.email_empresa.enviar_email_diario_gestor_aniversariante(aniversariantes_do_dia_df, data_simulada)
 
-        logging.info(">>> Processo finalizado com sucesso.")
+            # --- Lógica de Aniversário de Nascimento ---
+            logging.info(">>> Processando aniversariantes de nascimento...")
+            aniversariantes_nascimento_do_dia_df = self.gerenciador_aniversariantes.identificar_aniversariantes_de_nascimento_do_dia(df_validos, data_simulada)
+            self.email_empresa.enviar_email_aniversariante_nascimento(aniversariantes_nascimento_do_dia_df, data_simulada)
+
+        finally:
+            # 3. Garante que a desconexão ocorra sempre
+            self.conexao_senior.desconectar()
+            logging.info(">>> Processo finalizado.")
 
 if __name__ == "__main__":
     configurar_logs()
