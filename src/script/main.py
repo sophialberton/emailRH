@@ -65,18 +65,23 @@ class Main:
         logging.info(f"Total de registros validos para processamento: {len(df_validos)}")
         
         # 3. Identificar aniversariantes do próximo mês
-        aniversariantes_mes_seguinte_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte(df_validos)
+        # aniversariantes_mes_seguinte_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte(df_validos)
 
-        # 4. Enviar e-mails
-        if not aniversariantes_mes_seguinte_df.empty:
-            # Enviar e-mail único para o RH
-            self.email_empresa.enviar_email_rh(aniversariantes_mes_seguinte_df)
+        # # 4. Enviar e-mails
+        # if not aniversariantes_mes_seguinte_df.empty:
+        #     # Enviar e-mail único para o RH
+        #     self.email_empresa.enviar_email_rh(aniversariantes_mes_seguinte_df)
             
-            # Enviar e-mails para cada gestor
-            self.email_empresa.enviar_emails_gestores(aniversariantes_mes_seguinte_df)
-        else:
-            logging.info("Nenhum aniversariante de tempo de empresa encontrado para o proximo mes.")
+        #     # Enviar e-mails para cada gestor
+        #     self.email_empresa.enviar_emails_gestores(aniversariantes_mes_seguinte_df)
+        # else:
+        #     logging.info("Nenhum aniversariante de tempo de empresa encontrado para o proximo mes.")
             
+        # 5. Enviar e-mails no dia do aniversáriante
+        aniversariantes_do_dia_df = self.gerenciador_aniversariantes.identificar_aniversariantes_do_dia(df_validos)
+        self.email_empresa.enviar_email_diario_gestor_aniversariante(aniversariantes_do_dia_df)
+        self.email_empresa.enviar_email_individual_aniversariante(aniversariantes_do_dia_df)
+
         logging.info(">>> Processo finalizado com sucesso.")
 
 if __name__ == "__main__":

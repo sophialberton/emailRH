@@ -41,3 +41,9 @@ class gerenciadorAniversariantes:
 
         logging.info(f"Encontrados {len(aniversariantes_df)} aniversariantes de tempo de empresa para o proximo mes.")
         return aniversariantes_df
+
+    def identificar_aniversariantes_do_dia(self, df_validos):
+        """Filtra o DataFrame para encontrar aniversariantes de tempo de casa no dia atual."""
+        logging.info("Identificando aniversariantes de tempo de empresa do dia.")
+        # Implementação será adicionada posteriormente
+        return pd.DataFrame()

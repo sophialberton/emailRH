@@ -120,4 +120,13 @@ class emailEmpresa:
                     body
                 )
 
+    def enviar_email_individual_aniversariante(self, aniversariantes_df):
+        """Envia e-mails individuais para cada colaborador aniversariante de tempo de empresa no dia."""
+        logging.info("Preparando envio de e-mails individuais para aniversariantes do dia.")
+        # Implementação será adicionada posteriormente
+
+    def enviar_email_diario_gestor_aniversariante(self, aniversariantes_df):
+        """Envia e-mail diário para o gestor com os aniversariantes de tempo de empresa do dia."""
+        logging.info("Preparando envio de e-mail diário para gestores com aniversariantes do dia.")
+        # Implementação será adicionada posteriormente
                 
