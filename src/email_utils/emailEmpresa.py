@@ -120,13 +120,84 @@ class emailEmpresa:
                     body
                 )
 
-    def enviar_email_individual_aniversariante(self, aniversariantes_df):
+    def enviar_email_individual_aniversariante(self, aniversariantes_df, data_simulada=None):
         """Envia e-mails individuais para cada colaborador aniversariante de tempo de empresa no dia."""
-        logging.info("Preparando envio de e-mails individuais para aniversariantes do dia.")
-        # Implementação será adicionada posteriormente
+        if aniversariantes_df.empty:
+            logging.info("Nenhum aniversariante de tempo de empresa hoje.")
+            return
 
-    def enviar_email_diario_gestor_aniversariante(self, aniversariantes_df):
+        hoje = data_simulada if data_simulada else datetime.now()
+        hoje_str = hoje.strftime('%d/%m/%Y')
+
+        for _, row in aniversariantes_df.iterrows():
+            nome = self.utilitariosComuns.formatar_nome(row['Nome'])
+            data_admissao = row['Data_admissao'].strftime('%d/%m/%Y')
+            anos_de_casa = row['Anos_de_casa']
+            email_pessoal = row.get('Email_pessoal', '')
+            email_corporativo = row.get('Email_corporativo', '')
+
+            destinatarios = []
+            if email_corporativo and not pd.isna(email_corporativo):
+                destinatarios.append(email_corporativo)
+            if email_pessoal and not pd.isna(email_pessoal):
+                destinatarios.append(email_pessoal)
+
+            if not destinatarios:
+                logging.warning(f"{nome} não possui e-mail válido cadastrado. Pulando envio.")
+                continue
+
+            subject = f"🎉 Parabéns pelo seu aniversário de empresa!"
+            saudacao = f"Olá, {nome}!"
+            mensagem = (
+                f"Hoje, {hoje_str}, você completa {anos_de_casa} ano(s) de empresa! 🎉\n\n"
+                f"Queremos agradecer por todo o seu empenho e dedicação desde sua admissão em {data_admissao}.\n"
+                f"Continue brilhando e contribuindo com seu talento. Parabéns por essa conquista!"
+            )
+            body = self.utilitariosComuns.gerar_corpo_email_aniversariantes(saudacao, mensagem, [], [])
+
+            logging.info(f"Enviando e-mail de parabéns para {nome} ({', '.join(destinatarios)}).")
+            self.conexaoGraph.enviar_email(
+                [EMAIL_TESTE] if AMBIENTE == "QAS" else destinatarios,
+                subject,
+                body
+            )
+
+
+    def enviar_email_diario_gestor_aniversariante(self, aniversariantes_df, data_simulada=None):
         """Envia e-mail diário para o gestor com os aniversariantes de tempo de empresa do dia."""
-        logging.info("Preparando envio de e-mail diário para gestores com aniversariantes do dia.")
-        # Implementação será adicionada posteriormente
-                
+        if aniversariantes_df.empty:
+            logging.info("Nenhum aniversariante de tempo de empresa hoje.")
+            return
+
+        hoje = data_simulada if data_simulada else datetime.now()
+        hoje_str = hoje.strftime('%d/%m/%Y')
+
+        for gestor, grupo in aniversariantes_df.groupby('Superior'):
+            email_gestor = grupo['Email_superior'].iloc[0]
+            if not email_gestor or pd.isna(email_gestor):
+                logging.warning(f"Gestor {gestor} não possui e-mail cadastrado. Pulando envio.")
+                continue
+
+            nome_gestor = self.utilitariosComuns.formatar_nome(gestor)
+            saudacao = f"Olá, {nome_gestor}!"
+            mensagem = f"Hoje ({hoje_str}), os seguintes colaboradores da sua equipe completam aniversário de tempo de empresa:"
+
+            colunas = ["🎉 Nome", "📅 Data de Admissão", "🏢 Anos de Empresa"]
+            grupo['DiaMes'] = grupo['Data_admissao'].dt.strftime('%m-%d')
+            grupo = grupo.sort_values(by='DiaMes')
+
+            dados_tabela = []
+            for _, row in grupo.iterrows():
+                dados_tabela.append([
+                    row['Nome'],
+                    row['Data_admissao'].strftime('%d/%m/%Y'),
+                    row['Anos_de_casa']
+                ])
+
+            body = self.utilitariosComuns.gerar_corpo_email_aniversariantes(saudacao, mensagem, colunas, dados_tabela)
+
+            logging.info(f"Enviando e-mail diário para o gestor {gestor} ({email_gestor}) com {len(dados_tabela)} aniversariantes.")
+            assunto = f"🎉 Aniversariantes de Tempo de Empresa - {hoje_str}"
+            destinatarios = [EMAIL_TESTE] if AMBIENTE == "QAS" else [email_gestor]
+            self.conexaoGraph.enviar_email(destinatarios, assunto, body)
+ 

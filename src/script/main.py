@@ -15,6 +15,10 @@ from email_utils.emailEmpresa import emailEmpresa
 from utils.config import dict_extract
 from dotenv import load_dotenv, find_dotenv
 
+from datetime import datetime
+data_simulada = datetime.strptime("01/09/2025", "%d/%m/%Y")
+
+
 # Configuração de logs
 def configurar_logs():
     log_directory = os.path.join(os.getcwd(), "Logs")
@@ -78,9 +82,9 @@ class Main:
         #     logging.info("Nenhum aniversariante de tempo de empresa encontrado para o proximo mes.")
             
         # 5. Enviar e-mails no dia do aniversáriante
-        aniversariantes_do_dia_df = self.gerenciador_aniversariantes.identificar_aniversariantes_do_dia(df_validos)
-        self.email_empresa.enviar_email_diario_gestor_aniversariante(aniversariantes_do_dia_df)
-        self.email_empresa.enviar_email_individual_aniversariante(aniversariantes_do_dia_df)
+        aniversariantes_do_dia_df = self.gerenciador_aniversariantes.identificar_aniversariantes_do_dia(df_validos, data_simulada)
+        self.email_empresa.enviar_email_individual_aniversariante(aniversariantes_do_dia_df, data_simulada)
+        self.email_empresa.enviar_email_diario_gestor_aniversariante(aniversariantes_do_dia_df, data_simulada)
 
         logging.info(">>> Processo finalizado com sucesso.")
 

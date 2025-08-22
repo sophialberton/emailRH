@@ -42,8 +42,28 @@ class gerenciadorAniversariantes:
         logging.info(f"Encontrados {len(aniversariantes_df)} aniversariantes de tempo de empresa para o proximo mes.")
         return aniversariantes_df
 
-    def identificar_aniversariantes_do_dia(self, df_validos):
+    def identificar_aniversariantes_do_dia(self, df_validos, data_simulada=None):
         """Filtra o DataFrame para encontrar aniversariantes de tempo de casa no dia atual."""
         logging.info("Identificando aniversariantes de tempo de empresa do dia.")
-        # Implementação será adicionada posteriormente
-        return pd.DataFrame()
+
+        hoje = data_simulada if data_simulada else datetime.now()
+        dia = hoje.day
+        mes = hoje.month
+
+        # Filtra por dia e mês de admissão
+        aniversariantes_df = df_validos[
+            (pd.to_datetime(df_validos['Data_admissao']).dt.day == dia) &
+            (pd.to_datetime(df_validos['Data_admissao']).dt.month == mes)
+        ].copy()
+
+        # Calcula os anos de casa
+        aniversariantes_df['Anos_de_casa'] = aniversariantes_df.apply(
+            lambda row: self.calcular_tempo_de_empresa([(row['Data_admissao'].strftime("%d/%m/%Y"), "")]).days // 365,
+            axis=1
+        )
+
+        # Filtra para garantir que tenham pelo menos 1 ano de casa
+        aniversariantes_df = aniversariantes_df[aniversariantes_df['Anos_de_casa'] >= 1]
+
+        logging.info(f"Encontrados {len(aniversariantes_df)} aniversariantes de tempo de empresa para o dia {hoje.strftime('%d/%m')}.")
+        return aniversariantes_df
