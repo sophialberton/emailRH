@@ -7,9 +7,9 @@ import pandas as pd
 import locale
 locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')  # Define o locale para português do Brasil
 import os
-# EMAIL_RH = os.getenv("EMAIL_RH", "comunicacaointerna@fgmdentalgroup.com")
-# EMAIL_TESTE = os.getenv("EMAIL_TESTE", "sophia.alberton@fgmdentalgroup.com")
-AMBIENTE = os.getenv("AMBIENTE", "PRD")  # "QAS" é o valor padrão se a variável não estiver definida
+EMAIL_RH = os.getenv("EMAIL_RH", "comunicacaointerna@fgmdentalgroup.com")
+EMAIL_TESTE = os.getenv("EMAIL_TESTE", "sophia.alberton@fgmdentalgroup.com")
+AMBIENTE = os.getenv("AMBIENTE", "QAS")  # "QAS" é o valor padrão se a variável não estiver definida
 
 class emailEmpresa:
     def __init__(self):
@@ -62,7 +62,12 @@ class emailEmpresa:
 
         logging.info(f"Enviando e-mail para o RH com {len(dados_tabela)} aniversariantes.")
         # self.conexaoGraph.enviar_email(self.email_rh_list, subject, body) # PRD
-        self.conexaoGraph.enviar_email(self.email_teste, subject, body) # QAS
+        # self.conexaoGraph.enviar_email(self.email_teste, subject, body) # QAS
+        self.conexaoGraph.enviar_email(
+            [EMAIL_TESTE] if AMBIENTE == "QAS" else [EMAIL_RH],
+            subject,
+            body
+        )
 
     def enviar_emails_gestores(self, aniversariantes_df):
         """Envia e-mails individuais para cada gestor com seus liderados."""
@@ -108,5 +113,11 @@ class emailEmpresa:
 
                 logging.info(f"Enviando e-mail para o gestor {gestor} ({email_gestor}) com {len(dados_tabela)} aniversariantes.")
                 # self.conexaoGraph.enviar_email([email_gestor], subject, body) # Enviar para o e-mail do gestor PRD
-                self.conexaoGraph.enviar_email(self.email_teste, subject, body) # Enviar para o e-mail QAS
+                # self.conexaoGraph.enviar_email(self.email_teste, subject, body) # Enviar para o e-mail QAS
+                self.conexaoGraph.enviar_email(
+                    [EMAIL_TESTE] if AMBIENTE == "QAS" else [email_gestor],
+                    subject,
+                    body
+                )
+
                 
