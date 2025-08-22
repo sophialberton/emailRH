@@ -38,5 +38,24 @@ EMAIL_TEMPLATES = {
     "INDIVIDUAL_ANIVERSARIANTE_NASCIMENTO": {
         "assunto": "🎉 Feliz Aniversário, {nome}!",
         "texto_alt_imagem": "Feliz Aniversário!"
+    },
+    # --- NOVOS TEMPLATES ADICIONADOS ---
+    "RH_ANIVERSARIANTES_NASCIMENTO": {
+        "assunto": "Aniversariantes do Mês - {mes_seguinte}",
+        "saudacao": "Olá,",
+        "mensagem": "Segue a lista de colaboradores que fazem aniversário no mês de {mes_seguinte}:",
+        "colunas": ["🎂 Nome", "📅 Data de Nascimento", "📍 Setor", "👤 Superior"],
+    },
+    "GESTOR_ANIVERSARIANTES_NASCIMENTO": {
+        "assunto": "Aniversariantes do Mês da sua Equipe - {mes_seguinte}",
+        "saudacao": "Olá, {nome_gestor}.",
+        "mensagem": "Segue a lista dos seus liderados que fazem aniversário no mês de {mes_seguinte}:",
+        "colunas": ["🎂 Nome", "📅 Data de Nascimento"],
+    },
+    "GESTOR_DIARIO_ANIVERSARIANTE_NASCIMENTO": {
+        "assunto": "🎉 Aniversariante do Dia na sua Equipe!",
+        "saudacao": "Olá, {nome_gestor}!",
+        "mensagem": "Lembre-se de desejar um feliz aniversário para o(s) seguinte(s) membro(s) da sua equipe hoje ({hoje_str}):",
+        "colunas": ["🎂 Nome", "📅 Data de Nascimento"],
     }
 }
