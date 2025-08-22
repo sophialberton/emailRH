@@ -7,6 +7,7 @@ class gerenciadorAniversariantes:
     def __init__(self):
         self.mes_seguinte = (datetime.now() + relativedelta(months=1)).strftime("%m")
 
+    # ... (funções existentes não foram alteradas) ...
     def calcular_tempo_de_empresa(self, admissoes):
         """Calcula o tempo total de empresa, considerando recontratações."""
         admissoes.sort(key=lambda x: datetime.strptime(x[0], "%d/%m/%Y"))
@@ -76,4 +77,16 @@ class gerenciadorAniversariantes:
         ].copy()
 
         logging.info(f"Encontrados {len(aniversariantes_df)} aniversariantes de nascimento para o dia {hoje.strftime('%d/%m')}.")
+        return aniversariantes_df
+
+    # --- NOVA FUNÇÃO ADICIONADA ---
+    def identificar_aniversariantes_de_nascimento_mes_seguinte(self, df_validos):
+        """Filtra o DataFrame para encontrar aniversariantes de nascimento no próximo mês."""
+        logging.info("Identificando aniversariantes de nascimento do próximo mês.")
+        
+        aniversariantes_df = df_validos[
+            pd.to_datetime(df_validos['Data_nascimento']).dt.strftime('%m') == self.mes_seguinte
+        ].copy()
+        
+        logging.info(f"Encontrados {len(aniversariantes_df)} aniversariantes de nascimento para o próximo mês.")
         return aniversariantes_df
