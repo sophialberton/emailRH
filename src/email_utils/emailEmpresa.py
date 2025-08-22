@@ -27,7 +27,8 @@ class emailEmpresa:
 
         email_para_envio = [EMAIL_TESTE] if AMBIENTE == "QAS" else destinatarios
         self.conexaoGraph.enviar_email(email_para_envio, assunto, body)
-
+    
+    # ... (funções de aniversário de empresa não foram alteradas) ...
     def enviar_email_rh(self, aniversariantes_df):
         """Envia o e-mail consolidado para o RH."""
         if AMBIENTE == "PRD" and datetime.now().day != 27:
@@ -193,3 +194,112 @@ class emailEmpresa:
 
             logging.info(f"Enviando e-mail de feliz aniversário para {nome} ({', '.join(destinatarios)}).")
             self._enviar_email_formatado(destinatarios, assunto, body)
+
+    # --- NOVOS MÉTODOS ADICIONADOS ---
+
+    def enviar_email_rh_aniversariantes_nascimento(self, aniversariantes_df):
+        """Envia o e-mail consolidado de aniversariantes de nascimento para o RH."""
+        if AMBIENTE == "PRD" and datetime.now().day != 27:
+            logging.info("Hoje não é dia 27. E-mail de aniversariantes de nascimento para RH não será enviado.")
+            return
+        if aniversariantes_df.empty:
+            logging.info("Nenhum aniversariante de nascimento no próximo mês. E-mail para o RH não enviado.")
+            return
+
+        template = EMAIL_TEMPLATES["RH_ANIVERSARIANTES_NASCIMENTO"]
+        mes_seguinte = (datetime.now() + relativedelta(months=1)).strftime("%B").title()
+        assunto = template["assunto"].format(mes_seguinte=mes_seguinte)
+        
+        aniversariantes_df['DiaMes'] = aniversariantes_df['Data_nascimento'].dt.strftime('%m-%d')
+        aniversariantes_df = aniversariantes_df.sort_values(by='DiaMes')
+
+        dados_tabela = [
+            [
+                row['Nome'],
+                row['Data_nascimento'].strftime('%d/%m'),
+                row.get('Local', 'N/A'),
+                row.get('Superior', 'N/A')
+            ] for _, row in aniversariantes_df.iterrows()
+        ]
+            
+        body = self.utilitariosComuns.gerar_corpo_email_aniversariantes(
+            template["saudacao"],
+            template["mensagem"].format(mes_seguinte=mes_seguinte),
+            template["colunas"],
+            dados_tabela
+        )
+
+        logging.info(f"Enviando e-mail para o RH com {len(dados_tabela)} aniversariantes de nascimento.")
+        self._enviar_email_formatado([EMAIL_RH], assunto, body)
+
+    def enviar_emails_gestores_aniversariantes_nascimento(self, aniversariantes_df):
+        """Envia e-mails mensais para cada gestor com seus liderados aniversariantes de nascimento."""
+        if AMBIENTE == "PRD" and datetime.now().day != 27:
+            logging.info("Hoje não é dia 27. E-mails de aniversariantes de nascimento para gestores não serão enviados.")
+            return
+        if aniversariantes_df.empty:
+            logging.info("Nenhum aniversariante de nascimento para notificar os gestores no próximo mês.")
+            return
+
+        template = EMAIL_TEMPLATES["GESTOR_ANIVERSARIANTES_NASCIMENTO"]
+        mes_seguinte = (datetime.now() + relativedelta(months=1)).strftime("%B").title()
+        
+        for gestor, grupo in aniversariantes_df.groupby('Superior'):
+            email_gestor = grupo['Email_superior'].iloc[0]
+            if not email_gestor or pd.isna(email_gestor):
+                logging.warning(f"Gestor {gestor} não possui e-mail cadastrado. Pulando notificação de aniversário de nascimento.")
+                continue
+            
+            nome_gestor_formatado = self.utilitariosComuns.formatar_nome(gestor)
+            assunto = template["assunto"].format(mes_seguinte=mes_seguinte)
+            
+            grupo['DiaMes'] = grupo['Data_nascimento'].dt.strftime('%m-%d')
+            grupo = grupo.sort_values(by='DiaMes')
+            dados_tabela = [
+                [row['Nome'], row['Data_nascimento'].strftime('%d/%m')]
+                for _, row in grupo.iterrows()
+            ]
+
+            body = self.utilitariosComuns.gerar_corpo_email_aniversariantes(
+                template["saudacao"].format(nome_gestor=nome_gestor_formatado),
+                template["mensagem"].format(mes_seguinte=mes_seguinte),
+                template["colunas"],
+                dados_tabela
+            )
+
+            logging.info(f"Enviando e-mail para o gestor {gestor} ({email_gestor}) com {len(dados_tabela)} aniversariantes de nascimento.")
+            self._enviar_email_formatado([email_gestor], assunto, body)
+
+    def enviar_email_diario_gestor_aniversariante_nascimento(self, aniversariantes_df, data_simulada=None):
+        """Envia e-mail diário para o gestor com os aniversariantes de nascimento do dia."""
+        if aniversariantes_df.empty:
+            logging.info("Nenhum aniversariante de nascimento hoje para notificar gestores.")
+            return
+
+        template = EMAIL_TEMPLATES["GESTOR_DIARIO_ANIVERSARIANTE_NASCIMENTO"]
+        hoje = data_simulada if data_simulada else datetime.now()
+        hoje_str = hoje.strftime('%d/%m')
+
+        for gestor, grupo in aniversariantes_df.groupby('Superior'):
+            email_gestor = grupo['Email_superior'].iloc[0]
+            if not email_gestor or pd.isna(email_gestor):
+                logging.warning(f"Gestor {gestor} não possui e-mail cadastrado. Pulando notificação diária de aniversário de nascimento.")
+                continue
+
+            nome_gestor_formatado = self.utilitariosComuns.formatar_nome(gestor)
+            assunto = template["assunto"]
+            
+            dados_tabela = [
+                [row['Nome'], row['Data_nascimento'].strftime('%d/%m')]
+                for _, row in grupo.iterrows()
+            ]
+
+            body = self.utilitariosComuns.gerar_corpo_email_aniversariantes(
+                template["saudacao"].format(nome_gestor=nome_gestor_formatado),
+                template["mensagem"].format(hoje_str=hoje_str),
+                template["colunas"],
+                dados_tabela
+            )
+
+            logging.info(f"Enviando e-mail diário (nascimento) para o gestor {gestor} ({email_gestor}) com {len(dados_tabela)} aniversariantes.")
+            self._enviar_email_formatado([email_gestor], assunto, body)
