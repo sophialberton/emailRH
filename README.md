@@ -1,60 +1,112 @@
-# emailRH
-Automação de envio de emails para o RH da FGM Dental Group.
+## README.md:
+# Projeto de Automação de E-mails de Aniversário
 
-# Atual Versão: Envio automatizado de aniversários de nascimento e tempo de casa
-- [x] E-mails para RH: mensal de *aniversariantes tempo de casa* (todo dia 27 do mês)
-- [x] E-mails para gestores: mensal *aniversariantes tempo de casa* (todo dia 27 do mês)
-- [x] E-mails para gestores: diário *aniversariantes de casa*
-- [x] E-mails individuais para os *aniversariantes de casa* no dia do seu aniversário
-- [x] E-mails para RH: mensal de *aniversariantes nascimento* (todo dia 27 do mês)
-- [x] E-mails para gestores: mensal de *aniversariantes nascimento* (todo dia 27 do mês)
-- [x] E-mails para gestores: diário *aniversariantes nascimento*
-- [x] E-mails individuais para os *aniversariantes nascimento* no dia do seu aniversário
----
+## 1. Descrição
+Este projeto automatiza o envio de e-mails de felicitações para colaboradores em duas ocasiões: aniversário de tempo de empresa e aniversário de nascimento. O sistema busca os dados diretamente do banco de dados da Senior, classifica os usuários, identifica os aniversariantes do dia e envia e-mails personalizados.
+## 2. Funcionalidades Principais
+-   **Aniversário de Tempo de Empresa:**
+    -   Envia um e-mail individual para o colaborador no dia do seu aniversário de empresa.
+    -   Envia um e-mail diário para o gestor com a lista de aniversariantes da sua equipe.
+    -   Envia um relatório mensal para o RH com todos os aniversariantes do próximo mês.
+-   **Aniversário de Nascimento:**
+    -   Envia um e-mail com uma imagem personalizada para o colaborador no dia do seu aniversário.
+-   **Classificação Inteligente:** Filtra e processa apenas usuários ativos e com dados válidos.
+-   **Configurável:** O ambiente (teste ou produção) e as credenciais são gerenciados por variáveis de ambiente.
 
-# Implementar sobre o envio de tempo de casa
-- [ ] E-mails individuais para os *aniversariantes ESTRELAS de casa* no dia do seu aniversário
+## 3. Arquitetura do Projeto
 
-#### Estrutura/Arquitetura Atual
+```mermaid
+graph TD
+    A[Início da Execução] --> B{Configura Logs};
+    B --> C{Conectar ao Banco de Dados Senior};
+    C --> D[Busca e Classifica Colaboradores];
+    
+    D --> E[Processamento de Aniversário de Empresa];
+    E --> F{Identifica Aniversariantes do Próximo Mês};
+    F --> G[Envia Relatório Mensal para RH e Gestores];
+    E --> H{Identifica Aniversariantes do Dia};
+    H --> I[Envia E-mail Individual e Notificação para Gestor];
+    
+    D --> J[Processamento de Aniversário de Nascimento];
+    J --> K{Identifica Aniversariantes do Próximo Mês};
+    K --> L[Envia Relatório Mensal para RH e Gestores];
+    J --> M{Identifica Aniversariantes do Dia};
+    M --> N[Envia E-mail Individual e Notificação para Gestor];
+
+    subgraph Finalização
+        I --> Z{Desconectar do BD};
+        G --> Z;
+        L --> Z;
+        N --> Z;
+    end
+    
+    Z --> FIM[Fim];
 ```
-├───data
-│   ├─── conexaoGraph.py         # Responsável pela comunicação com a API da Microsoft (Graph) para enviar os e-mails.
-│   ├─── conexaoSenior.py        # Gerencia a conexão e a extração de dados do banco de dados Oracle (Senior).
-│   └─── __init__.py             # Transforma o diretório 'data' em um pacote Python.
-│
-├───email_utils
-│   ├─── emailEmpresa.py         # Orquestra a criação e o envio de todos os tipos de e-mail (RH, gestores, individuais).
-│   ├─── email_config.py         # Centraliza todos os textos e modelos dos e-mails (assuntos, mensagens, etc.).
-│   └─── __init__.py             # Transforma o diretório 'email_utils' em um pacote Python.
-│
-├───gerenciadores
-│   ├─── gerenciarAniversariantes.py # Contém a lógica para filtrar e identificar os aniversariantes (de empresa e de nascimento).
-│   ├─── gerenciarColaboradores.py # Responsável por classificar os colaboradores em válidos e inválidos, aplicando as regras de negócio.
-│   └─── __init__.py             # Transforma o diretório 'gerenciadores' em um pacote Python.
-│
-├───script
-│   ├─── main.py                 # Ponto de entrada do programa; orquestra todo o fluxo de execução.
-│   └─── __init__.py             # Transforma o diretório 'script' em um pacote Python.
-│
-└───utils
-    ├─── config.py               # Carrega as variáveis de ambiente e credenciais (senhas, IDs, etc.) do arquivo .env.
-    ├─── utilitariosComuns.py    # Fornece funções auxiliares usadas em várias partes do projeto (ex: formatar nome, gerar HTML).
-    └─── __init__.py             # Transforma o diretório 'utils' em um pacote Python.V
-```
 ---
-### CARTÕES DE TEMPO DE CASA
-Envio dos e-mails individuais para os colaboradores:
-Os envios para as lideranças seguirão o mesmo modelo dos aniversários:
-- 1 envio mensal no dia 27, com a relação dos colaboradores que farão aniversário de casa no mês seguinte;
-- 1 envio mensal para cada líder, com a relação da sua equipe que faz aniversário de casa naquele mês;
-- 1 envio diário com os nomes dos colaboradores que fazem aniversário de tempo de casa naquele dia.
+```mermaid
+graph TD;
+    subgraph "Sistema de Automação"
+        A["script/main.py (Orquestrador)"]
+    end
 
-#### O primeiro envio com a relação completa será realizado no dia 27/08.
-Por enquanto:
-Para colaboradores com mais de duas matrículas, os envios são feitos manualmente.
-Os nomes são encaminhados para meu e-mail, eu realizo a consulta e solicito o envio ao Jovem Aprendiz.
+    subgraph "Lógica de Negócio"
+        B["gerenciadores/"]
+        C["email_utils/"]
+    end
 
-Cartões de Aniversário dos Colaboradores (BIRTHMAIL)
-O envio está ocorrendo normalmente:
-- E-mails individuais para os aniversariantes no dia do seu aniversário;
-- E-mails para as lideranças: mensal, da equipe e diário.
+    subgraph "Acesso a Dados e Utilitários"
+        D["data/ (Conexões)"]
+        E["utils/ (Configurações)"]
+    end
+
+    A --> B;
+    A --> C;
+    C --> D;
+    B --> D;
+    C --> E;
+    D --> E;
+```
+
+---
+## 4. Pré-requisitos
+-   Python 3.9 ou superior
+-   Acesso ao banco de dados Oracle da Senior
+-   Credenciais da API do Microsoft Graph com permissão para enviar e-mails
+
+## 5. Instalação e Configuração
+**Passo 1: Clonar o repositório**
+```bash
+git clone <URL_DO_SEU_REPOSITORIO>
+cd <NOME_DO_PROJETO>
+```
+
+**Passo 2: Criar um ambiente virtual (recomendado)**
+```bash
+python -m venv venv
+source venv/bin/activate  # No Windows: venv\Scripts\activate
+```
+
+**Passo 3: Instalar as dependências**
+Crie um arquivo `requirements.txt` com o comando `pip freeze > requirements.txt` e adicione-o ao seu repositório.
+```bash
+pip install -r requirements.txt
+```
+
+**Passo 4: Configurar as variáveis de ambiente**
+Renomeie o arquivo `.env.example` para `.env` e preencha todas as variáveis necessárias:
+
+-   `host_senior`, `port_senior`, `service_name_senior`, `user_senior`, `password_senior`: Credenciais do banco de dados Senior.
+-   `TENANT_ID`, `CLIENT_ID`, `CLIENT_SECRET`, `USER_MAIL`: Credenciais da API do Microsoft Graph.
+-   `PICTUREBIRTH`, `LINKREDIRECT`: URLs para a imagem e o link do e-mail de aniversário.
+-   `AMBIENTE`: Defina como `QAS` (teste) ou `PRD` (produção).
+
+## 6. Como Executar
+Para executar o script, utilize o seguinte comando a partir da raiz do projeto:
+
+```bash
+python src/script/main.py
+```
+
+Recomenda-se agendar a execução deste comando para rodar diariamente através de uma ferramenta como o Agendador de Tarefas do Windows ou o Cron do Linux.
+
+---
