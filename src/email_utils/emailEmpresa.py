@@ -6,6 +6,10 @@ from data.conexaoGraph import conexaoGraph
 import pandas as pd
 import locale
 locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')  # Define o locale para português do Brasil
+import os
+# EMAIL_RH = os.getenv("EMAIL_RH", "comunicacaointerna@fgmdentalgroup.com")
+# EMAIL_TESTE = os.getenv("EMAIL_TESTE", "sophia.alberton@fgmdentalgroup.com")
+AMBIENTE = os.getenv("AMBIENTE", "PRD")  # "QAS" é o valor padrão se a variável não estiver definida
 
 class emailEmpresa:
     def __init__(self):
@@ -15,6 +19,10 @@ class emailEmpresa:
 
     def enviar_email_rh(self, aniversariantes_df):
         """Envia o e-mail consolidado para o RH."""
+        if AMBIENTE == "PRD" and datetime.now().day != 27:
+            if datetime.now().day != 27:
+                logging.info("Hoje nao e dia 27. E-mails para RH nao sera enviado.")
+                return
         if aniversariantes_df.empty:
             logging.info("Nenhum aniversariante de tempo de empresa no proximo mes. E-mail para o RH nao enviado.")
             return
@@ -58,6 +66,10 @@ class emailEmpresa:
 
     def enviar_emails_gestores(self, aniversariantes_df):
         """Envia e-mails individuais para cada gestor com seus liderados."""
+        if AMBIENTE == "PRD" and datetime.now().day != 27:
+            if datetime.now().day != 27:
+                logging.info("Hoje nao e dia 27. E-mails para gestores nao serao enviados.")
+                return
         if aniversariantes_df.empty:
             logging.info("Nenhum aniversariante para notificar os gestores.")
             return
