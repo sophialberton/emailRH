@@ -1,44 +1,45 @@
 # emailRH
 Automação de envio de emails para o RH da FGM Dental Group.
 
-# Atual Versão: Apenas Aniversariantes de Tempo de Casa
+# Atual Versão: Envio automatizado de aniversários de nascimento e tempo de casa
 - [x] E-mails para RH: mensal de *aniversariantes tempo de casa* (todo dia 27 do mês)
 - [x] E-mails para gestores: mensal *aniversariantes tempo de casa* (todo dia 27 do mês)
 - [x] E-mails para gestores: diário *aniversariantes de casa*
 - [x] E-mails individuais para os *aniversariantes de casa* no dia do seu aniversário
+- [x] E-mails para RH: mensal de *aniversariantes nascimento* (todo dia 27 do mês)
+- [x] E-mails para gestores: mensal de *aniversariantes nascimento* (todo dia 27 do mês)
+- [x] E-mails para gestores: diário *aniversariantes nascimento*
+- [x] E-mails individuais para os *aniversariantes nascimento* no dia do seu aniversário
 ---
 
-# Implementar na Versão tempo de casa
+# Implementar sobre o envio de tempo de casa
 - [ ] E-mails individuais para os *aniversariantes ESTRELAS de casa* no dia do seu aniversário
----
-# Implementar para inegrar aniversários de nascimento
-- [ ] E-mails para RH: mensal de *aniversariantes nascimento* (todo dia 27 do mês)
-- [ ] E-mails para gestores: mensal de *aniversariantes nascimento* (todo dia 27 do mês)
-- [ ] E-mails para gestores: diário *aniversariantes nascimento*
-- [ ] E-mails individuais para os *aniversariantes nascimento* no dia do seu aniversário
 
 #### Estrutura/Arquitetura Atual
 ```
 ├───data
-│   │   conexaoGraph.py - Funções que conectam com a API Graph
-│   │   conexaoSenior.py - Funções que conectam com o Banco de Dados Senior
-│   └───
-├───email
-│   │   emailEmpresa.py - Funções relacionadas aos emails de aniversário de tempo de empresa
-│   └───
-|
+│   ├─── conexaoGraph.py         # Responsável pela comunicação com a API da Microsoft (Graph) para enviar os e-mails.
+│   ├─── conexaoSenior.py        # Gerencia a conexão e a extração de dados do banco de dados Oracle (Senior).
+│   └─── __init__.py             # Transforma o diretório 'data' em um pacote Python.
+│
+├───email_utils
+│   ├─── emailEmpresa.py         # Orquestra a criação e o envio de todos os tipos de e-mail (RH, gestores, individuais).
+│   ├─── email_config.py         # Centraliza todos os textos e modelos dos e-mails (assuntos, mensagens, etc.).
+│   └─── __init__.py             # Transforma o diretório 'email_utils' em um pacote Python.
+│
 ├───gerenciadores
-│   │   gerenciarAniversariantes.py - Funções que calculam/filtram aniversáriantes
-│   │   gerenciarColaboradores.py - Funções que válidam cadastro de colaborador para calculos
-│   └───
-|
+│   ├─── gerenciarAniversariantes.py # Contém a lógica para filtrar e identificar os aniversariantes (de empresa e de nascimento).
+│   ├─── gerenciarColaboradores.py # Responsável por classificar os colaboradores em válidos e inválidos, aplicando as regras de negócio.
+│   └─── __init__.py             # Transforma o diretório 'gerenciadores' em um pacote Python.
+│
 ├───script
-│   │   main.py - Orquestra as principais funções para executar
-│   └───
-├───utils
-│   │   config.py - Dados de acesso
-│   │   utilitariosComuns.py - Funções utilizadas em todo projeto
-|   └───
+│   ├─── main.py                 # Ponto de entrada do programa; orquestra todo o fluxo de execução.
+│   └─── __init__.py             # Transforma o diretório 'script' em um pacote Python.
+│
+└───utils
+    ├─── config.py               # Carrega as variáveis de ambiente e credenciais (senhas, IDs, etc.) do arquivo .env.
+    ├─── utilitariosComuns.py    # Fornece funções auxiliares usadas em várias partes do projeto (ex: formatar nome, gerar HTML).
+    └─── __init__.py             # Transforma o diretório 'utils' em um pacote Python.V
 ```
 ---
 ### CARTÕES DE TEMPO DE CASA
