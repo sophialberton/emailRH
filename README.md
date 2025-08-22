@@ -1,8 +1,8 @@
-## README.md:
 # Projeto de Automação de E-mails de Aniversário
 
 ## 1. Descrição
 Este projeto automatiza o envio de e-mails de felicitações para colaboradores em duas ocasiões: aniversário de tempo de empresa e aniversário de nascimento. O sistema busca os dados diretamente do banco de dados da Senior, classifica os usuários, identifica os aniversariantes do dia e envia e-mails personalizados.
+
 ## 2. Funcionalidades Principais
 -   **Aniversário de Tempo de Empresa:**
     -   Envia um e-mail individual para o colaborador no dia do seu aniversário de empresa.
@@ -76,8 +76,8 @@ graph TD;
 ## 5. Instalação e Configuração
 **Passo 1: Clonar o repositório**
 ```bash
-git clone <URL_DO_SEU_REPOSITORIO>
-cd <NOME_DO_PROJETO>
+git clone <https://github.com/sophialberton/emailRH.git>
+cd <emailRH>
 ```
 
 **Passo 2: Criar um ambiente virtual (recomendado)**
