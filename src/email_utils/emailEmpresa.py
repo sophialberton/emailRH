@@ -1,0 +1,100 @@
+import logging
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+from utils.utilitariosComuns import utilitariosComuns
+from data.conexaoGraph import conexaoGraph
+import pandas as pd
+import locale
+locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')  # Define o locale para português do Brasil
+
+class emailEmpresa:
+    def __init__(self):
+        self.utilitariosComuns = utilitariosComuns()
+        self.conexaoGraph = conexaoGraph()
+        self.email_teste = ["sophia.alberton@fgmdentalgroup.com"] # E-mail para testes
+
+    def enviar_email_rh(self, aniversariantes_df):
+        """Envia o e-mail consolidado para o RH."""
+        if aniversariantes_df.empty:
+            logging.info("Nenhum aniversariante de tempo de empresa no proximo mes. E-mail para o RH nao enviado.")
+            return
+
+        emojis = ["🎉", "📅", "🏢", "📍", "👤"]
+        
+        # Limpeza e formatação dos dados
+        for coluna in ["Nome", "Local", "Superior"]:
+            aniversariantes_df[coluna] = aniversariantes_df[coluna].apply(
+                lambda x: self.utilitariosComuns.formatar_nome(
+                    ''.join([c for c in x if c not in emojis]) if isinstance(x, str) else ''
+                )
+            )
+
+
+        mes_seguinte = (datetime.now() + relativedelta(months=1)).strftime("%B").title()
+        subject = f'Aniversariantes de Tempo de Empresa - {mes_seguinte}'
+        
+        saudacao = "Olá,"
+        mensagem = f"Segue a lista de colaboradores que fazem aniversário de tempo de empresa no mês de {mes_seguinte}:"
+        colunas = ["🎉 Nome", " 📅 Data de Admissão", "🏢 Anos de Empresa", "📍 Setor", "👤 Superior"]
+        aniversariantes_df['DiaMes'] = aniversariantes_df['Data_admissao'].dt.strftime('%m-%d')
+        aniversariantes_df = aniversariantes_df.sort_values(by='DiaMes')
+
+        # Prepara os dados para a tabela
+        dados_tabela = []
+        for _, row in aniversariantes_df.iterrows():
+            dados_tabela.append([
+                row['Nome'],
+                row['Data_admissao'].strftime('%d/%m/%Y'),
+                row['Anos_de_casa'],
+                row.get('Local', 'N/A'),
+                row.get('Superior', 'N/A')
+            ])
+            
+        body = self.utilitariosComuns.gerar_corpo_email_aniversariantes(saudacao, mensagem, colunas, dados_tabela)
+
+        logging.info(f"Enviando e-mail para o RH com {len(dados_tabela)} aniversariantes.")
+        # self.conexaoGraph.enviar_email(self.email_rh_list, subject, body) # PRD
+        self.conexaoGraph.enviar_email(self.email_teste, subject, body) # QAS
+
+    def enviar_emails_gestores(self, aniversariantes_df):
+        """Envia e-mails individuais para cada gestor com seus liderados."""
+        if aniversariantes_df.empty:
+            logging.info("Nenhum aniversariante para notificar os gestores.")
+            return
+
+        mes_seguinte = (datetime.now() + relativedelta(months=1)).strftime("%B").title()
+        
+        for gestor, grupo in aniversariantes_df.groupby('Superior'):
+            if not grupo.empty:
+                email_gestor = grupo['Email_superior'].iloc[0]
+                if not email_gestor or pd.isna(email_gestor):
+                    logging.warning(f"Gestor {gestor} nao possui e-mail cadastrado. Pulando notificacao.")
+                    continue
+                emojis = ["🎉", "📅", "🏢"]
+                # Limpeza e formatação dos dados
+                for coluna in ["Nome", "Local", "Superior"]:
+                    aniversariantes_df[coluna] = aniversariantes_df[coluna].apply(
+                        lambda x: self.utilitariosComuns.formatar_nome(
+                            ''.join([c for c in x if c not in emojis]) if isinstance(x, str) else ''
+                        )
+                    )
+                subject = f'Aniversariantes de Tempo de Empresa da sua Equipe - {mes_seguinte}'
+                saudacao = f"Olá, {self.utilitariosComuns.formatar_nome(gestor)}."
+                mensagem = f"Segue a lista dos seus liderados que fazem aniversário de tempo de empresa no mês de {mes_seguinte}:"
+                colunas = ["🎉 Nome", "📅 Data de Admissão", "🏢 Anos de Empresa"]
+                grupo['DiaMes'] = grupo['Data_admissao'].dt.strftime('%m-%d')
+                grupo = grupo.sort_values(by='DiaMes')
+                dados_tabela = []
+                for _, row in grupo.iterrows():
+                    dados_tabela.append([
+                        row['Nome'],
+                        row['Data_admissao'].strftime('%d/%m/%Y'),
+                        row['Anos_de_casa']
+                    ])
+
+                body = self.utilitariosComuns.gerar_corpo_email_aniversariantes(saudacao, mensagem, colunas, dados_tabela)
+
+                logging.info(f"Enviando e-mail para o gestor {gestor} ({email_gestor}) com {len(dados_tabela)} aniversariantes.")
+                # self.conexaoGraph.enviar_email([email_gestor], subject, body) # Enviar para o e-mail do gestor PRD
+                self.conexaoGraph.enviar_email(self.email_teste, subject, body) # Enviar para o e-mail QAS
+                
