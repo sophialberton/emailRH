@@ -4,11 +4,11 @@ Automação de envio de emails para o RH da FGM Dental Group.
 # Atual Versão: Apenas Aniversariantes de Tempo de Casa
 - [x] E-mails para RH: mensal de *aniversariantes tempo de casa* (todo dia 27 do mês)
 - [x] E-mails para gestores: mensal *aniversariantes tempo de casa* (todo dia 27 do mês)
+- [x] E-mails para gestores: diário *aniversariantes de casa*
+- [x] E-mails individuais para os *aniversariantes de casa* no dia do seu aniversário
 ---
 
 # Implementar na Versão tempo de casa
-- [ ] E-mails para gestores: diário *aniversariantes de casa*
-- [ ] E-mails individuais para os *aniversariantes de casa* no dia do seu aniversário
 - [ ] E-mails individuais para os *aniversariantes ESTRELAS de casa* no dia do seu aniversário
 ---
 # Implementar para inegrar aniversários de nascimento
