@@ -2,14 +2,10 @@ import logging
 from datetime import datetime, timedelta
 import pandas as pd
 from dateutil.relativedelta import relativedelta
-# Use a data atual para execução normal ou defina uma data para simulação
-data_simulada = datetime.strptime("01/06/2025", "%d/%m/%Y")
-# data_simulada = None # Descomente a linha acima e comente esta para simular
 
 class gerenciadorAniversariantes:
     def __init__(self):
         self.mes_seguinte = (datetime.now() + relativedelta(months=1)).strftime("%m")
-        self.data_referencia = data_simulada or datetime.now()
 
     # ... (funções existentes não foram alteradas) ...
     def calcular_tempo_de_empresa(self, admissoes):
@@ -28,9 +24,10 @@ class gerenciadorAniversariantes:
         data_admissao_recente = datetime.strptime(admissoes[-1][0], "%d/%m/%Y")
         return max(datetime.now() - data_admissao_recente, timedelta(0))
 
-    def identificar_aniversariantes_mes_seguinte(self, df_validos):
+    def identificar_aniversariantes_mes_seguinte(self, df_validos, data_simulada=None):
         """Filtra o DataFrame para encontrar aniversariantes de tempo de casa no próximo mês."""
-        mes_seguinte = (self.data_referencia + relativedelta(months=1)).month
+        data_referencia = data_simulada or datetime.now()
+        mes_seguinte = (data_referencia + relativedelta(months=1)).month
 
         aniversariantes_df = df_validos[
             pd.to_datetime(df_validos['Data_admissao']).dt.month == mes_seguinte
@@ -87,11 +84,12 @@ class gerenciadorAniversariantes:
         return aniversariantes_df
 
     # --- NOVA FUNÇÃO ADICIONADA ---
-    def identificar_aniversariantes_de_nascimento_mes_seguinte(self, df_validos):
+    def identificar_aniversariantes_de_nascimento_mes_seguinte(self, df_validos, data_simulada=None):
         """Filtra o DataFrame para encontrar aniversariantes de nascimento no próximo mês."""
+        data_referencia = data_simulada or datetime.now()
         logging.info("Identificando aniversariantes de nascimento do próximo mês.")
         
-        mes_seguinte = (self.data_referencia + relativedelta(months=1)).month
+        mes_seguinte = (data_referencia + relativedelta(months=1)).month
 
         aniversariantes_df = df_validos[
             pd.to_datetime(df_validos['Data_nascimento']).dt.month == mes_seguinte

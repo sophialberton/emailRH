@@ -175,7 +175,7 @@ class emailEmpresa:
             )
 
             logging.info(f"Enviando e-mail diário (tempo de empresa) para o gestor {gestor} ({email_gestor}) com {len(dados_tabela)} aniversariantes.")
-            self._enviar_email_formatado([email_gestor], assunto, body)
+            self.enviar_email_formatado([email_gestor], assunto, body)
 
     # --- Aniversário de Nascimento
 
