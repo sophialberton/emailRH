@@ -27,12 +27,10 @@ def classificar_usuarios(usuarios):
     for cpf, grupo in usuarios.groupby('Cpf'):
         logging.debug(f"Processando CPF: {cpf} com {len(grupo)} registros")
 
-        # Ignora qualquer colaborador com "Mittelstadt" no nome
         if grupo['Nome'].str.contains("Mittelstadt", case=False).any():
             logging.debug(f"Ignorando CPF {cpf} por conter 'Mittelstadt' no nome")
             continue
 
-        # Ignora se o superior for "Bianca De Oliveira Luiz Mittelstadt"
         if grupo['Superior'].str.contains("Bianca De Oliveira Luiz Mittelstadt", case=False, na=False).any():
             logging.debug(f"Ignorando CPF {cpf} por ter como superior 'Bianca De Oliveira Luiz Mittelstadt'")
             continue
@@ -51,7 +49,15 @@ def classificar_usuarios(usuarios):
         elif not tem_email_pessoal:
             invalidos_sem_email.append(grupo_ativos)
         elif not tem_superior_valido:
-            invalidos_sem_superior.append(grupo_ativos)
+            # Verifica se todos os superiores estão com situação 7
+            todos_superiores_demitidos = grupo_ativos['Situacao_superior'].eq(7).all()
+            if todos_superiores_demitidos:
+                grupo_corrigido = grupo_ativos.copy()
+                grupo_corrigido = grupo_corrigido.groupby('Cpf', as_index=False).first()
+                grupo_corrigido['Superior'] = "Posto de trabalho de superior não ocupado"
+                validos.append(grupo_corrigido)
+            else:
+                invalidos_sem_superior.append(grupo_ativos)
         else:
             validos.append(grupo_ativos_com_superior)
 

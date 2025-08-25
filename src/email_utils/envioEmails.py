@@ -15,10 +15,15 @@ EMAIL_RH = os.getenv("EMAIL_RH", "comunicacaointerna@fgmdentalgroup.com")
 EMAIL_TESTE = os.getenv("EMAIL_TESTE", "sophia.alberton@fgmdentalgroup.com")
 AMBIENTE = os.getenv("AMBIENTE", "QAS")
 
+# Use a data atual para execução normal ou defina uma data para simulação
+data_simulada = datetime.strptime("01/06/2025", "%d/%m/%Y")
+# data_simulada = None # Descomente a linha acima e comente esta para simular
+
 class emailEmpresa:
     def __init__(self):
         self.utilitariosComuns = utilitariosComuns()
         self.conexaoGraph = conexaoGraph()
+        self.data_referencia = data_simulada or datetime.now()
 
     def _enviar_email_formatado(self, destinatarios, assunto, body):
         """Função auxiliar para enviar e-mails, tratando ambiente de QAS/PRD."""
@@ -32,9 +37,9 @@ class emailEmpresa:
     # --- Aniversio de Empresa
 
     # Mensal RH
-    def enviar_email_rh(self, aniversariantes_df):
+    def enviar_email_rh(self, aniversariantes_df, data_simulada=None):
         """Envia o e-mail consolidado para o RH."""
-        if AMBIENTE == "PRD" and datetime.now().day != 27:
+        if AMBIENTE == "PRD" and self.data_referencia.day != 27:
             logging.info("Hoje nao e dia 27. E-mail para RH nao sera enviado.")
             return
         if aniversariantes_df.empty:
@@ -42,7 +47,7 @@ class emailEmpresa:
             return
 
         template = EMAIL_TEMPLATES["RH_ANIVERSARIANTES_EMPRESA"]
-        mes_seguinte = (datetime.now() + relativedelta(months=1)).strftime("%B").title()
+        mes_seguinte = (self.data_referencia + relativedelta(months=1)).strftime("%B").title()
         assunto = template["assunto"].format(mes_seguinte=mes_seguinte)
         
         aniversariantes_df['DiaMes'] = aniversariantes_df['Data_admissao'].dt.strftime('%m-%d')
@@ -68,9 +73,9 @@ class emailEmpresa:
         logging.info(f"Enviando e-mail para o RH com {len(dados_tabela)} aniversariantes.")
         self._enviar_email_formatado([EMAIL_RH], assunto, body)
     # Mensal Gestores
-    def enviar_emails_gestores(self, aniversariantes_df):
+    def enviar_emails_gestores(self, aniversariantes_df, data_simulada=None):
         """Envia e-mails individuais para cada gestor com seus liderados."""
-        if AMBIENTE == "PRD" and datetime.now().day != 27:
+        if AMBIENTE == "PRD" and self.data_referencia.day != 27:
             logging.info("Hoje nao e dia 27. E-mails para gestores nao serao enviados.")
             return
         if aniversariantes_df.empty:
@@ -78,7 +83,7 @@ class emailEmpresa:
             return
 
         template = EMAIL_TEMPLATES["GESTOR_ANIVERSARIANTES_EMPRESA"]
-        mes_seguinte = (datetime.now() + relativedelta(months=1)).strftime("%B").title()
+        mes_seguinte = (self.data_referencia + relativedelta(months=1)).strftime("%B").title()
         
         for gestor, grupo in aniversariantes_df.groupby('Superior'):
             email_gestor = grupo['Email_superior'].iloc[0]
@@ -113,7 +118,7 @@ class emailEmpresa:
             return
 
         template = EMAIL_TEMPLATES["INDIVIDUAL_ANIVERSARIANTE_EMPRESA"]
-        hoje = data_simulada if data_simulada else datetime.now()
+        hoje = data_simulada if data_simulada else self.data_referencia
         hoje_str = hoje.strftime('%d/%m/%Y')
 
         for _, row in aniversariantes_df.iterrows():
@@ -145,7 +150,7 @@ class emailEmpresa:
             return
 
         template = EMAIL_TEMPLATES["GESTOR_DIARIO_ANIVERSARIANTE_EMPRESA"]
-        hoje = data_simulada if data_simulada else datetime.now()
+        hoje = data_simulada if data_simulada else self.data_referencia
         hoje_str = hoje.strftime('%d/%m/%Y')
 
         for gestor, grupo in aniversariantes_df.groupby('Superior'):
@@ -175,9 +180,9 @@ class emailEmpresa:
     # --- Aniversário de Nascimento
 
     # Mensal RH
-    def enviar_email_rh_aniversariantes_nascimento(self, aniversariantes_df):
+    def enviar_email_rh_aniversariantes_nascimento(self, aniversariantes_df, data_simulada=None):
         """Envia o e-mail consolidado de aniversariantes de nascimento para o RH."""
-        if AMBIENTE == "PRD" and datetime.now().day != 27:
+        if AMBIENTE == "PRD" and self.data_referencia.day != 27:
             logging.info("Hoje não é dia 27. E-mail de aniversariantes de nascimento para RH não será enviado.")
             return
         if aniversariantes_df.empty:
@@ -185,7 +190,7 @@ class emailEmpresa:
             return
 
         template = EMAIL_TEMPLATES["RH_ANIVERSARIANTES_NASCIMENTO"]
-        mes_seguinte = (datetime.now() + relativedelta(months=1)).strftime("%B").title()
+        mes_seguinte = (self.data_referencia + relativedelta(months=1)).strftime("%B").title()
         assunto = template["assunto"].format(mes_seguinte=mes_seguinte)
         
         aniversariantes_df['DiaMes'] = aniversariantes_df['Data_nascimento'].dt.strftime('%m-%d')
@@ -210,9 +215,9 @@ class emailEmpresa:
         logging.info(f"Enviando e-mail para o RH com {len(dados_tabela)} aniversariantes de nascimento.")
         self._enviar_email_formatado([EMAIL_RH], assunto, body)
     # Mensal Gestores
-    def enviar_emails_gestores_aniversariantes_nascimento(self, aniversariantes_df):
+    def enviar_emails_gestores_aniversariantes_nascimento(self, aniversariantes_df, data_simulada=None):
         """Envia e-mails mensais para cada gestor com seus liderados aniversariantes de nascimento."""
-        if AMBIENTE == "PRD" and datetime.now().day != 27:
+        if AMBIENTE == "PRD" and self.data_referencia.day != 27:
             logging.info("Hoje não é dia 27. E-mails de aniversariantes de nascimento para gestores não serão enviados.")
             return
         if aniversariantes_df.empty:
@@ -220,7 +225,7 @@ class emailEmpresa:
             return
 
         template = EMAIL_TEMPLATES["GESTOR_ANIVERSARIANTES_NASCIMENTO"]
-        mes_seguinte = (datetime.now() + relativedelta(months=1)).strftime("%B").title()
+        mes_seguinte = (self.data_referencia + relativedelta(months=1)).strftime("%B").title()
         
         for gestor, grupo in aniversariantes_df.groupby('Superior'):
             email_gestor = grupo['Email_superior'].iloc[0]
@@ -281,7 +286,7 @@ class emailEmpresa:
             return
 
         template = EMAIL_TEMPLATES["GESTOR_DIARIO_ANIVERSARIANTE_NASCIMENTO"]
-        hoje = data_simulada if data_simulada else datetime.now()
+        hoje = data_simulada if data_simulada else self.data_referencia
         hoje_str = hoje.strftime('%d/%m')
 
         for gestor, grupo in aniversariantes_df.groupby('Superior'):

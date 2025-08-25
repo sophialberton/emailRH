@@ -2,10 +2,14 @@ import logging
 from datetime import datetime, timedelta
 import pandas as pd
 from dateutil.relativedelta import relativedelta
+# Use a data atual para execução normal ou defina uma data para simulação
+data_simulada = datetime.strptime("01/06/2025", "%d/%m/%Y")
+# data_simulada = None # Descomente a linha acima e comente esta para simular
 
 class gerenciadorAniversariantes:
     def __init__(self):
         self.mes_seguinte = (datetime.now() + relativedelta(months=1)).strftime("%m")
+        self.data_referencia = data_simulada or datetime.now()
 
     # ... (funções existentes não foram alteradas) ...
     def calcular_tempo_de_empresa(self, admissoes):
@@ -26,19 +30,22 @@ class gerenciadorAniversariantes:
 
     def identificar_aniversariantes_mes_seguinte(self, df_validos):
         """Filtra o DataFrame para encontrar aniversariantes de tempo de casa no próximo mês."""
+        mes_seguinte = (self.data_referencia + relativedelta(months=1)).month
+
         aniversariantes_df = df_validos[
-            pd.to_datetime(df_validos['Data_admissao']).dt.strftime('%m') == self.mes_seguinte
+            pd.to_datetime(df_validos['Data_admissao']).dt.month == mes_seguinte
         ].copy()
 
         aniversariantes_df['Anos_de_casa'] = aniversariantes_df.apply(
             lambda row: self.calcular_tempo_de_empresa([(row['Data_admissao'].strftime("%d/%m/%Y"), "")]).days // 365,
             axis=1
         )
-        
+
         aniversariantes_df = aniversariantes_df[aniversariantes_df['Anos_de_casa'] >= 1]
 
-        logging.info(f"Encontrados {len(aniversariantes_df)} aniversariantes de tempo de empresa para o proximo mes.")
+        logging.info(f"Encontrados {len(aniversariantes_df)} aniversariantes de tempo de empresa para o próximo mês.")
         return aniversariantes_df
+
 
     def identificar_aniversariantes_do_dia(self, df_validos, data_simulada=None):
         """Filtra o DataFrame para encontrar aniversariantes de tempo de casa no dia atual."""
@@ -84,8 +91,10 @@ class gerenciadorAniversariantes:
         """Filtra o DataFrame para encontrar aniversariantes de nascimento no próximo mês."""
         logging.info("Identificando aniversariantes de nascimento do próximo mês.")
         
+        mes_seguinte = (self.data_referencia + relativedelta(months=1)).month
+
         aniversariantes_df = df_validos[
-            pd.to_datetime(df_validos['Data_nascimento']).dt.strftime('%m') == self.mes_seguinte
+            pd.to_datetime(df_validos['Data_nascimento']).dt.month == mes_seguinte
         ].copy()
         
         logging.info(f"Encontrados {len(aniversariantes_df)} aniversariantes de nascimento para o próximo mês.")
