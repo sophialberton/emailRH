@@ -19,7 +19,7 @@ class aniversarioEmpresa:
     def __init__(self):
         self.utilitariosComuns = utilitariosComuns()
         self.conexaoGraph = conexaoGraph()
-
+    # Mensal RH 
     def enviar_email_rh_aniversariante_empresa(self, aniversariantes_df, data_simulada=None):
         """Envia o e-mail consolidado para o RH."""
         data_referencia = data_simulada or datetime.now()
@@ -163,7 +163,7 @@ class aniversarioEmpresa:
 
             logging.info(f"Enviando e-mail diário (tempo de empresa) para o gestor {gestor} ({email_gestor}) com {len(dados_tabela)} aniversariantes.")
             self.utilitariosComuns.enviar_email_formatado([email_gestor], assunto, body)
-
+    # Dia do aniversario aniversariante estrela
     def enviar_email_individual_aniversariante_empresa_star(self, aniversariantes_df, data_simulada=None):
         """Envia e-mails individuais para colaboradores que fazem aniversário de tempo de casa (Star)."""
         logging.info("...........Chegou aqui no star envio")
@@ -173,6 +173,7 @@ class aniversarioEmpresa:
 
         aniversariantes_df['Data_aniversario_empresa'] = pd.to_datetime(aniversariantes_df['Data_admissao']).dt.strftime('%d/%m')
 
+        template = EMAIL_TEMPLATES["INDIVIDUAL_ANIVERSARIANTE_EMPRESA"]
         for _, row in aniversariantes_df.iterrows():
             nome = self.utilitariosComuns.formatar_nome(row['Nome'])
             anos = row['Anos_de_casa']
@@ -181,8 +182,7 @@ class aniversarioEmpresa:
             if not destinatarios:
                 logging.warning(f"{nome} não possui e-mail válido cadastrado. Pulando envio.")
                 continue
-
-            assunto = f"Parabéns pelos {anos} anos de FGM - {nome}!"
+            assunto = template["assunto"].format(nome=nome, anos_de_casa=row['Anos_de_casa'])
             imagem_src = f"https://fgmdentalgroup.com/wp-content/uploads/2025/02/{anos}-anos-estrela.jpg"
             link_redirect = f"https://fgmdentalgroup.com/Endomarketing/Tempo%20de%20casa/{anos}%20anos/index.html"
 

@@ -110,3 +110,8 @@ python src/script/main.py
 Recomenda-se agendar a execução deste comando para rodar diariamente através de uma ferramenta como o Agendador de Tarefas do Windows ou o Cron do Linux.
 
 ---
+ 5, 10, 15, 20, 25, 30
+https://fgmdentalgroup.com/wp-content/uploads/2025/02/{anos}-anos.jpg
+https://fgmdentalgroup.com/wp-content/uploads/2025/02/{anos}-anos-estrela.jpg
+https://fgmdentalgroup.com/Endomarketing/Tempo%20de%20casa/{anos}%20anos/index.html
+https://fgmdentalgroup.com/Endomarketing/Tempo%20de%20casa/Geral/index.html

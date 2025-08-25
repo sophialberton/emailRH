@@ -69,7 +69,8 @@ class utilitariosComuns:
                 emoji = emojis[i] if emojis and i < len(emojis) else ""
                 body += f"<td>{emoji} {valor}</td>"
             body += "</tr>"
-        body += "Atenciosamente,<br>Equipe de Gestão de Pessoas"
+        body += "</table>"  
+        body += "<br>Atenciosamente,<br>Equipe de Gestão de Pessoas"
         return body
 
     def gerar_email_com_imagem(self, imagem_src, texto_alt, link=None):
