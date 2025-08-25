@@ -11,7 +11,8 @@ if src_path not in sys.path:
 from data.conexaoSenior import conexaoSenior
 from gerenciadores.gerenciarColaboradores import classificar_usuarios
 from gerenciadores.gerenciarAniversariantes import gerenciadorAniversariantes
-from email_utils.envioEmails import emailEmpresa
+from email_utils.aniversarioEmpresa import aniversarioEmpresa
+from email_utils.aniversarioNascimento import aniversarioNascimento
 from utils.config import dict_extract
 from dotenv import load_dotenv, find_dotenv
 
@@ -46,7 +47,8 @@ class Main:
         load_dotenv(find_dotenv())
         self.conexao_senior = conexaoSenior(**dict_extract["Senior"])
         self.gerenciador_aniversariantes = gerenciadorAniversariantes()
-        self.email_empresa = emailEmpresa()
+        self.email_empresa = aniversarioEmpresa()
+        self.email_nascimento = aniversarioNascimento()
 
     def executar(self):
         """Orquestra a execução de todo o processo."""
@@ -71,21 +73,21 @@ class Main:
             logging.info(">>> Processando aniversariantes de tempo de empresa...")
             aniversariantes_mes_seguinte_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte(df_validos)
             self.email_empresa.enviar_email_rh(aniversariantes_mes_seguinte_df, data_simulada=data_simulada)
-            # self.email_empresa.enviar_emails_gestores(aniversariantes_mes_seguinte_df)
+            self.email_empresa.enviar_emails_gestores(aniversariantes_mes_seguinte_df)
             
-            # aniversariantes_do_dia_df = self.gerenciador_aniversariantes.identificar_aniversariantes_do_dia(df_validos, data_simulada=data_simulada)
-            # self.email_empresa.enviar_email_individual_aniversariante(aniversariantes_do_dia_df, data_simulada=data_simulada)
-            # self.email_empresa.enviar_email_diario_gestor_aniversariante(aniversariantes_do_dia_df, data_simulada=data_simulada)
+            aniversariantes_do_dia_df = self.gerenciador_aniversariantes.identificar_aniversariantes_do_dia(df_validos, data_simulada=data_simulada)
+            self.email_empresa.enviar_email_individual_aniversariante(aniversariantes_do_dia_df, data_simulada=data_simulada)
+            self.email_empresa.enviar_email_diario_gestor_aniversariante(aniversariantes_do_dia_df, data_simulada=data_simulada)
 
             # --- Lógica de Aniversário de Nascimento ---
             logging.info(">>> Processando aniversariantes de nascimento...")
             aniversariantes_nasc_mes_seguinte_df = self.gerenciador_aniversariantes.identificar_aniversariantes_de_nascimento_mes_seguinte(df_validos)
-            self.email_empresa.enviar_email_rh_aniversariantes_nascimento(aniversariantes_nasc_mes_seguinte_df, data_simulada=data_simulada)
-            # self.email_empresa.enviar_emails_gestores_aniversariantes_nascimento(aniversariantes_nasc_mes_seguinte_df)
+            self.email_nascimento.enviar_email_rh_aniversariantes_nascimento(aniversariantes_nasc_mes_seguinte_df, data_simulada=data_simulada)
+            self.email_nascimento.enviar_emails_gestores_aniversariantes_nascimento(aniversariantes_nasc_mes_seguinte_df)
 
-            # aniversariantes_nasc_do_dia_df = self.gerenciador_aniversariantes.identificar_aniversariantes_de_nascimento_do_dia(df_validos, data_simulada=data_simulada)
-            # self.email_empresa.enviar_email_individual_aniversariante_nascimento(aniversariantes_nasc_do_dia_df, data_simulada=data_simulada)
-            # self.email_empresa.enviar_email_diario_gestor_aniversariante_nascimento(aniversariantes_nasc_do_dia_df, data_simulada=data_simulada)
+            aniversariantes_nasc_do_dia_df = self.gerenciador_aniversariantes.identificar_aniversariantes_de_nascimento_do_dia(df_validos, data_simulada=data_simulada)
+            self.email_nascimento.enviar_email_individual_aniversariante_nascimento(aniversariantes_nasc_do_dia_df, data_simulada=data_simulada)
+            self.email_nascimento.enviar_email_diario_gestor_aniversariante_nascimento(aniversariantes_nasc_do_dia_df, data_simulada=data_simulada)
 
         finally:
             self.conexao_senior.desconectar()

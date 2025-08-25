@@ -10,7 +10,6 @@ Caso contrario desses requisitos se torna um usuário inválido, que sera separa
 - Colaborador sem superior
 """
 import logging
-import re
 import pandas as pd
 
 def classificar_usuarios(usuarios):
