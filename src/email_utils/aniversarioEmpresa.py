@@ -25,7 +25,7 @@ class aniversarioEmpresa:
         self.conexaoGraph = conexaoGraph()
         self.data_referencia = data_simulada or datetime.now()
 
-    def enviar_email_rh(self, aniversariantes_df, data_simulada=None):
+    def enviar_email_rh_aniversariante_empresa(self, aniversariantes_df, data_simulada=None):
         """Envia o e-mail consolidado para o RH."""
         if AMBIENTE == "PRD" and self.data_referencia.day != 27:
             logging.info("Hoje nao e dia 27. E-mail para RH nao sera enviado.")
@@ -61,7 +61,7 @@ class aniversarioEmpresa:
         logging.info(f"Enviando e-mail para o RH com {len(dados_tabela)} aniversariantes.")
         self.utilitariosComuns.enviar_email_formatado([EMAIL_RH], assunto, body)
     # Mensal Gestores
-    def enviar_emails_gestores(self, aniversariantes_df, data_simulada=None):
+    def enviar_emails_gestores_aniversariante_empresa(self, aniversariantes_df, data_simulada=None):
         """Envia e-mails individuais para cada gestor com seus liderados."""
         if AMBIENTE == "PRD" and self.data_referencia.day != 27:
             logging.info("Hoje nao e dia 27. E-mails para gestores nao serao enviados.")
@@ -99,7 +99,7 @@ class aniversarioEmpresa:
             logging.info(f"Enviando e-mail para o gestor {gestor} ({email_gestor}) com {len(dados_tabela)} aniversariantes.")
             self.utilitariosComuns.enviar_email_formatado([email_gestor], assunto, body)
     # Dia do aniversário aniversariante
-    def enviar_email_individual_aniversariante(self, aniversariantes_df, data_simulada=None):
+    def enviar_email_individual_aniversariante_empresa(self, aniversariantes_df, data_simulada=None):
         """Envia e-mails individuais para cada colaborador aniversariante de tempo de empresa no dia."""
         if aniversariantes_df.empty:
             logging.info("Nenhum aniversariante de tempo de empresa hoje.")
@@ -131,7 +131,7 @@ class aniversarioEmpresa:
             logging.info(f"Enviando e-mail de parabéns (tempo de empresa) para {nome} ({', '.join(destinatarios)}).")
             self.utilitariosComuns.enviar_email_formatado(destinatarios, assunto, body)
     # Dia do aniversário gestores de aniversariantes
-    def enviar_email_diario_gestor_aniversariante(self, aniversariantes_df, data_simulada=None):
+    def enviar_email_diario_gestor_aniversariante_empresa(self, aniversariantes_df, data_simulada=None):
         """Envia e-mail diário para o gestor com os aniversariantes de tempo de empresa do dia."""
         if aniversariantes_df.empty:
             logging.info("Nenhum aniversariante de tempo de empresa hoje para notificar gestores.")

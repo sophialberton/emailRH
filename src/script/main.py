@@ -72,12 +72,12 @@ class Main:
             # --- Lógica de Aniversário de Empresa ---
             logging.info(">>> Processando aniversariantes de tempo de empresa...")
             aniversariantes_mes_seguinte_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte(df_validos)
-            self.email_empresa.enviar_email_rh(aniversariantes_mes_seguinte_df, data_simulada=data_simulada)
-            self.email_empresa.enviar_emails_gestores(aniversariantes_mes_seguinte_df)
+            self.email_empresa.enviar_email_rh_aniversariante_empresa(aniversariantes_mes_seguinte_df, data_simulada=data_simulada)
+            self.email_empresa.enviar_emails_gestores_aniversariante_empresa(aniversariantes_mes_seguinte_df)
             
             aniversariantes_do_dia_df = self.gerenciador_aniversariantes.identificar_aniversariantes_do_dia(df_validos, data_simulada=data_simulada)
-            self.email_empresa.enviar_email_individual_aniversariante(aniversariantes_do_dia_df, data_simulada=data_simulada)
-            self.email_empresa.enviar_email_diario_gestor_aniversariante(aniversariantes_do_dia_df, data_simulada=data_simulada)
+            self.email_empresa.enviar_email_individual_aniversariante_empresa(aniversariantes_do_dia_df, data_simulada=data_simulada)
+            self.email_empresa.enviar_email_diario_gestor_aniversariante_empresa(aniversariantes_do_dia_df, data_simulada=data_simulada)
 
             # --- Lógica de Aniversário de Nascimento ---
             logging.info(">>> Processando aniversariantes de nascimento...")
