@@ -3,7 +3,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from utils.utilitariosComuns import utilitariosComuns
 from data.conexaoGraph import conexaoGraph
-from utils.email_config import EMAIL_TEMPLATES
+from email_utils.email_config import EMAIL_TEMPLATES
 from utils.config import pictureBirth, linkRedirect
 import pandas as pd
 import locale
