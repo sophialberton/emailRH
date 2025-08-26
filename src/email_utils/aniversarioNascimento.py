@@ -19,7 +19,7 @@ class aniversarioNascimento:
     def __init__(self):
         self.utilitariosComuns = utilitariosComuns()
         self.conexaoGraph = conexaoGraph()
-    
+    # Mensal RH
     def enviar_email_rh_aniversariantes_nascimento(self, aniversariantes_df, data_simulada=None):
         """Envia o e-mail consolidado de aniversariantes de nascimento para o RH."""
         data_referencia = data_simulada or datetime.now()
@@ -67,16 +67,15 @@ class aniversarioNascimento:
 
         template = EMAIL_TEMPLATES["GESTOR_ANIVERSARIANTES_NASCIMENTO"]
         mes_seguinte = (data_referencia + relativedelta(months=1)).strftime("%B").title()
-        
+        assunto = template["assunto"].format(mes_seguinte=mes_seguinte)
+
         for gestor, grupo in aniversariantes_df.groupby('Superior'):
             email_gestor = grupo['Email_superior'].iloc[0]
             if not email_gestor or pd.isna(email_gestor):
                 logging.warning(f"Gestor {gestor} não possui e-mail cadastrado. Pulando notificação de aniversário de nascimento.")
                 continue
             
-            nome_gestor_formatado = self.utilitariosComuns.formatar_nome(gestor)
-            assunto = template["assunto"].format(mes_seguinte=mes_seguinte)
-            
+            nome_gestor_formatado = self.utilitariosComuns.formatar_nome(gestor)            
             grupo['DiaMes'] = grupo['Data_nascimento'].dt.strftime('%m-%d')
             grupo = grupo.sort_values(by='DiaMes')
             dados_tabela = [

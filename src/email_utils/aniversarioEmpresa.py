@@ -69,6 +69,7 @@ class aniversarioEmpresa:
 
         template = EMAIL_TEMPLATES["GESTOR_ANIVERSARIANTES_EMPRESA"]
         mes_seguinte = (data_referencia + relativedelta(months=1)).strftime("%B").title()
+        assunto = template["assunto"].format(mes_seguinte=mes_seguinte)
         
         for gestor, grupo in aniversariantes_df.groupby('Superior'):
             email_gestor = grupo['Email_superior'].iloc[0]
@@ -77,8 +78,6 @@ class aniversarioEmpresa:
                 continue
             
             nome_gestor_formatado = self.utilitariosComuns.formatar_nome(gestor)
-            assunto = template["assunto"].format(mes_seguinte=mes_seguinte)
-            
             grupo['DiaMes'] = grupo['Data_admissao'].dt.strftime('%m-%d')
             grupo = grupo.sort_values(by='DiaMes')
             dados_tabela = [
