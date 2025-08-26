@@ -1,9 +1,19 @@
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-import pandas as pd
+import locale
+import os
+from data.conexaoGraph import conexaoGraph
 import logging
+locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
+# ["gestaodepessoas@fgmdentalgroup.com", "grupo.coordenadores@fgmdentalgroup.com", "grupo.supervisores@fgmdentalgroup.com", "grupo.gerentes@fgmdentalgroup.com"]
+EMAIL_RH = os.getenv("EMAIL_RH", "comunicacaointerna@fgmdentalgroup.com")
+EMAIL_TESTE = os.getenv("EMAIL_TESTE", "sophia.alberton@fgmdentalgroup.com")
+AMBIENTE = os.getenv("AMBIENTE", "QAS")
 
 class utilitariosComuns:
+    def __init__(self):
+        self.conexaoGraph = conexaoGraph()
+
     def formatar_nome(self, nome):
         """Formata o nome com a primeira letra maiúscula de cada palavra."""
         return ' '.join(word.capitalize() for word in nome.split()) if nome else ""
@@ -59,7 +69,8 @@ class utilitariosComuns:
                 emoji = emojis[i] if emojis and i < len(emojis) else ""
                 body += f"<td>{emoji} {valor}</td>"
             body += "</tr>"
-        body += "</table><br>Atenciosamente,<br>Equipe de Gestão de Pessoas"
+        body += "</table>"  
+        body += "<br>Atenciosamente,<br>Equipe de Gestão de Pessoas"
         return body
 
     def gerar_email_com_imagem(self, imagem_src, texto_alt, link=None):
@@ -69,3 +80,12 @@ class utilitariosComuns:
                     {link_tag}
                         <img src="{imagem_src}" alt="{texto_alt}">
                     </a></body></html>"""
+    
+    def enviar_email_formatado(self, destinatarios, assunto, body):
+        """Função auxiliar para enviar e-mails, tratando ambiente de QAS/PRD."""
+        if not destinatarios:
+            logging.warning("Nenhum destinatário para o e-mail.")
+            return
+
+        email_para_envio = EMAIL_TESTE.split(",") if AMBIENTE == "QAS" else destinatarios
+        self.conexaoGraph.enviar_email(email_para_envio, assunto, body)

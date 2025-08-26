@@ -20,17 +20,18 @@ EMAIL_TEMPLATES = {
         "colunas": ["🎉 Nome", "📅 Data de Admissão", "🏢 Anos de Empresa"],
     },
     "INDIVIDUAL_ANIVERSARIANTE_EMPRESA": {
-        "assunto": "🎉 Parabéns pelo seu aniversário de empresa!",
-        "saudacao": "Olá, {nome}!",
+        "assunto": "🎉 Parabéns pelo {anos_de_casa} ano(s) de FGM - {nome}",
+        "saudacao": "Olá, {nome}!<br>",
         "mensagem": (
-            "Hoje, {hoje_str}, você completa {anos_de_casa} ano(s) de empresa! 🎉<br><br>"
+            "Hoje, {hoje_str}, você completa {anos_de_casa} ano(s) de empresa! 🎉<br>"
             "Queremos agradecer por todo o seu empenho e dedicação desde sua admissão em {data_admissao}.<br>"
             "Continue brilhando e contribuindo com seu talento. Parabéns por essa conquista!"
         ),
         "colunas": [],
+
     },
     "GESTOR_DIARIO_ANIVERSARIANTE_EMPRESA": {
-        "assunto": "🎉 Aniversariantes de Tempo de Empresa - {hoje_str}",
+        "assunto": "Aniversariantes do Dia de Tempo de Empresa - {hoje_str}",
         "saudacao": "Olá, {nome_gestor}!",
         "mensagem": "Hoje ({hoje_str}), os seguintes colaboradores da sua equipe completam aniversário de tempo de empresa:",
         "colunas": ["🎉 Nome", "📅 Data de Admissão", "🏢 Anos de Empresa"],
@@ -38,5 +39,24 @@ EMAIL_TEMPLATES = {
     "INDIVIDUAL_ANIVERSARIANTE_NASCIMENTO": {
         "assunto": "🎉 Feliz Aniversário, {nome}!",
         "texto_alt_imagem": "Feliz Aniversário!"
+    },
+    # --- NOVOS TEMPLATES ADICIONADOS ---
+    "RH_ANIVERSARIANTES_NASCIMENTO": {
+        "assunto": "Aniversariantes do Mês - {mes_seguinte}",
+        "saudacao": "Olá,",
+        "mensagem": "Segue a lista de colaboradores que fazem aniversário no mês de {mes_seguinte}:",
+        "colunas": ["🎂 Nome", "📅 Data de Nascimento", "📍 Setor", "👤 Superior"],
+    },
+    "GESTOR_ANIVERSARIANTES_NASCIMENTO": {
+        "assunto": "Aniversariantes do Mês da sua Equipe - {mes_seguinte}",
+        "saudacao": "Olá, {nome_gestor}.",
+        "mensagem": "Segue a lista dos seus liderados que fazem aniversário no mês de {mes_seguinte}:",
+        "colunas": ["🎂 Nome", "📅 Data de Nascimento"],
+    },
+    "GESTOR_DIARIO_ANIVERSARIANTE_NASCIMENTO": {
+        "assunto": "Aniversariante do Dia na sua Equipe!",
+        "saudacao": "Olá, {nome_gestor}!",
+        "mensagem": "Lembre-se de desejar um feliz aniversário para o(s) seguinte(s) membro(s) da sua equipe hoje ({hoje_str}):",
+        "colunas": ["🎂 Nome", "📅 Data de Nascimento"],
     }
 }
