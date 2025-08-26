@@ -57,8 +57,8 @@ def classificar_usuarios(usuarios):
                         tempo1 = (demissoes[i] - admissoes[i]).days
                         tempo2 = (datetime.today() - admissoes[i+1]).days if situacoes[i+1] != 7 else (demissoes[i+1] - admissoes[i+1]).days
                         tempo_total = tempo1 + tempo2
-                        grupo_ordenado.loc[:, 'Tempo_empresa_dias'] = tempo_total
-                        lista_para_vanessa.append(grupo_ordenado)
+                        grupo['Tempo_empresa_dias'] = tempo_total
+                        lista_para_vanessa.append(grupo)  # inclui todos os registros do colaborador
                         cpfs_vanessa.add(cpf)
                         break
 
