@@ -1,5 +1,13 @@
 # Projeto de Automação de E-mails de Aniversário
-
+- [x] E-mails para RH: mensal de *aniversariantes tempo de casa* (todo dia 27 do mês)
+- [x] E-mails para gestores: mensal *aniversariantes tempo de casa* (todo dia 27 do mês)
+- [x] E-mails para gestores: diário *aniversariantes de casa*
+- [x] E-mails individuais para os *aniversariantes de casa* no dia do seu aniversário
+- [x] E-mails para RH: mensal de *aniversariantes nascimento* (todo dia 27 do mês)
+- [x] E-mails para gestores: mensal de *aniversariantes nascimento* (todo dia 27 do mês)
+- [x] E-mails para gestores: diário *aniversariantes nascimento*
+- [x] E-mails individuais para os *aniversariantes nascimento* no dia do seu aniversário
+- [x] E-mails individuais para os *aniversariantes ESTRELAS de casa* no dia do seu aniversário
 ## 1. Descrição
 Este projeto automatiza o envio de e-mails de felicitações para colaboradores em duas ocasiões: aniversário de tempo de empresa e aniversário de nascimento. O sistema busca os dados diretamente do banco de dados da Senior, classifica os usuários, identifica os aniversariantes do dia e envia e-mails personalizados.
 
@@ -19,28 +27,36 @@ Este projeto automatiza o envio de e-mails de felicitações para colaboradores 
 graph TD
     A[Início da Execução] --> B{Configura Logs};
     B --> C{Conectar ao Banco de Dados Senior};
-    C --> D[Busca e Classifica Colaboradores];
-    
-    D --> E[Processamento de Aniversário de Empresa];
-    E --> F{Identifica Aniversariantes do Próximo Mês};
-    F --> G[Envia Relatório Mensal para RH e Gestores];
-    E --> H{Identifica Aniversariantes do Dia};
-    H --> I[Envia E-mail Individual e Notificação para Gestor];
-    
-    D --> J[Processamento de Aniversário de Nascimento];
-    J --> K{Identifica Aniversariantes do Próximo Mês};
-    K --> L[Envia Relatório Mensal para RH e Gestores];
-    J --> M{Identifica Aniversariantes do Dia};
-    M --> N[Envia E-mail Individual e Notificação para Gestor];
+    C --> D[Busca e Classifica Colaboradores Válidos];
+
+    subgraph Processo de Aniversário de Empresa
+        D --> E[Aniversário de Empresa];
+        E --> F{Identifica Aniversariantes do Próximo Mês};
+        F --> G[Envia Relatório Mensal para RH e Gestores];
+        E --> H{Identifica Aniversariantes do Dia};
+        H --> H_Sub{Separa por tipo};
+        H_Sub --> I_Star[Envia E-mail Individual para Aniversariantes Estrela];
+        H_Sub --> I_Normal[Envia E-mail Individual para Aniversariantes Comuns];
+        I_Star --> I_Gestor;
+        I_Normal --> I_Gestor[Envia Notificação Diária para Gestor];
+    end
+
+    subgraph Processo de Aniversário de Nascimento
+        D --> J[Aniversário de Nascimento];
+        J --> K{Identifica Aniversariantes do Próximo Mês};
+        K --> L[Envia Relatório Mensal para RH e Gestores];
+        J --> M{Identifica Aniversariantes do Dia};
+        M --> N[Envia E-mail Individual e Notificação para Gestor];
+    end
 
     subgraph Finalização
-        I --> Z{Desconectar do BD};
-        G --> Z;
+        G --> Z{Desconectar do BD};
+        I_Gestor --> Z;
         L --> Z;
         N --> Z;
     end
-    
-    Z --> FIM[Fim];
+
+    Z --> FIM[Fim da Execução];
 ```
 ---
 ```mermaid
