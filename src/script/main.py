@@ -17,8 +17,8 @@ from utils.config import dict_extract
 from dotenv import load_dotenv, find_dotenv
 
 # Use a data atual para execução normal ou defina uma data para simulação
-data_simulada = datetime.strptime("01/07/2026", "%d/%m/%Y")
-# data_simulada = None # Descomente a linha acima e comente esta para simular
+# data_simulada = datetime.strptime("26/08/2026", "%d/%m/%Y")
+data_simulada = None # Descomente a linha acima e comente esta para simular
 
 def configurar_logs():
     log_directory = os.path.join(os.getcwd(), "Logs")

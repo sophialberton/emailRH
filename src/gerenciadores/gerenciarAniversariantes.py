@@ -43,29 +43,33 @@ class gerenciadorAniversariantes:
         logging.info(f"Encontrados {len(aniversariantes_df)} aniversariantes de tempo de empresa para o próximo mês.")
         return aniversariantes_df
 
-
     def identificar_aniversariantes_do_dia(self, df_validos, data_simulada=None):
         """Filtra o DataFrame para encontrar aniversariantes de tempo de casa no dia atual."""
         logging.info("Identificando aniversariantes de tempo de empresa do dia.")
 
-        hoje = data_simulada if data_simulada else datetime.now()
+        hoje = pd.to_datetime(data_simulada) if data_simulada else pd.to_datetime(datetime.now())
         dia = hoje.day
         mes = hoje.month
 
+        # Garantir que a coluna está em datetime
+        df_validos['Data_admissao'] = pd.to_datetime(df_validos['Data_admissao'], errors='coerce')
+
         aniversariantes_df = df_validos[
-            (pd.to_datetime(df_validos['Data_admissao']).dt.day == dia) &
-            (pd.to_datetime(df_validos['Data_admissao']).dt.month == mes)
+            (df_validos['Data_admissao'].dt.day == dia) &
+            (df_validos['Data_admissao'].dt.month == mes)
         ].copy()
 
-        aniversariantes_df['Anos_de_casa'] = aniversariantes_df.apply(
-            lambda row: self.calcular_tempo_de_empresa([(row['Data_admissao'].strftime("%d/%m/%Y"), "")]).days // 365,
-            axis=1
-        )
+        # Calcular anos de casa com segurança
+        aniversariantes_df['Anos_de_casa'] = aniversariantes_df['Data_admissao'].apply(
+            lambda data: (hoje - data).days // 365 if pd.notnull(data) else 0
+        ).astype(int)
 
         aniversariantes_df = aniversariantes_df[aniversariantes_df['Anos_de_casa'] >= 1]
 
         logging.info(f"Encontrados {len(aniversariantes_df)} aniversariantes de tempo de empresa para o dia {hoje.strftime('%d/%m')}.")
         return aniversariantes_df
+
+
 
     def identificar_aniversariantes_de_nascimento_do_dia(self, df_validos, data_simulada=None):
         """Filtra o DataFrame para encontrar aniversariantes de nascimento no dia atual."""
