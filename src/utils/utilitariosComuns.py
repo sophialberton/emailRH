@@ -87,5 +87,5 @@ class utilitariosComuns:
             logging.warning("Nenhum destinatário para o e-mail.")
             return
 
-        email_para_envio = [EMAIL_TESTE] if AMBIENTE == "QAS" else destinatarios
+        email_para_envio = EMAIL_TESTE.split(",") if AMBIENTE == "QAS" else destinatarios
         self.conexaoGraph.enviar_email(email_para_envio, assunto, body)

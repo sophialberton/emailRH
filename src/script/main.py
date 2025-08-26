@@ -17,8 +17,8 @@ from utils.config import dict_extract
 from dotenv import load_dotenv, find_dotenv
 
 # Use a data atual para execução normal ou defina uma data para simulação
-data_simulada = datetime.strptime("01/07/2026", "%d/%m/%Y")
-# data_simulada = None # Descomente a linha acima e comente esta para simular
+# data_simulada = datetime.strptime("01/06/2025", "%d/%m/%Y")
+data_simulada = None # Descomente a linha acima e comente esta para simular
 
 def configurar_logs():
     log_directory = os.path.join(os.getcwd(), "Logs")
@@ -74,29 +74,28 @@ class Main:
             logging.info(">>> Processando aniversariantes de tempo de empresa...")
             aniversariantes_mes_seguinte_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte(df_validos, self.data_referencia)
             self.email_empresa.enviar_email_rh_aniversariante_empresa(aniversariantes_mes_seguinte_df, self.data_referencia)
-            self.email_empresa.enviar_emails_gestores_aniversariante_empresa(aniversariantes_mes_seguinte_df, self.data_referencia)
+            # self.email_empresa.enviar_emails_gestores_aniversariante_empresa(aniversariantes_mes_seguinte_df, self.data_referencia)
 
             aniversariantes_do_dia_df = self.gerenciador_aniversariantes.identificar_aniversariantes_do_dia(df_validos, self.data_referencia)
             # Lista de anos que recebem o e-mail especial (Star)
             anos_star = [5, 10, 15, 20, 25, 30]
             # Separar aniversariantes Star
-            aniversariantes_star_df = aniversariantes_do_dia_df[aniversariantes_do_dia_df['Anos_de_casa'].isin(anos_star)]
+            # aniversariantes_star_df = aniversariantes_do_dia_df[aniversariantes_do_dia_df['Anos_de_casa'].isin(anos_star)]
             # Separar aniversariantes normais
-            aniversariantes_normais_df = aniversariantes_do_dia_df[~aniversariantes_do_dia_df['Anos_de_casa'].isin(anos_star)]
-            self.email_empresa.enviar_email_rh_aniversariante_empresa(aniversariantes_mes_seguinte_df, self.data_referencia)
-            self.email_empresa.enviar_email_individual_aniversariante_empresa_star(aniversariantes_star_df, self.data_referencia)
-            self.email_empresa.enviar_email_individual_aniversariante_empresa(aniversariantes_normais_df, self.data_referencia)
-            self.email_empresa.enviar_email_diario_gestor_aniversariante_empresa(aniversariantes_do_dia_df, self.data_referencia)
+            # aniversariantes_normais_df = aniversariantes_do_dia_df[~aniversariantes_do_dia_df['Anos_de_casa'].isin(anos_star)]
+            # self.email_empresa.enviar_email_individual_aniversariante_empresa_star(aniversariantes_star_df, self.data_referencia)
+            # self.email_empresa.enviar_email_individual_aniversariante_empresa(aniversariantes_normais_df, self.data_referencia)
+            # self.email_empresa.enviar_email_diario_gestor_aniversariante_empresa(aniversariantes_do_dia_df, self.data_referencia)
             
             # --- Lógica de Aniversário de Nascimento ---
             logging.info(">>> Processando aniversariantes de nascimento...")
             aniversariantes_nasc_mes_seguinte_df = self.gerenciador_aniversariantes.identificar_aniversariantes_de_nascimento_mes_seguinte(df_validos, self.data_referencia)
             self.email_nascimento.enviar_email_rh_aniversariantes_nascimento(aniversariantes_nasc_mes_seguinte_df, self.data_referencia)
-            self.email_nascimento.enviar_emails_gestores_aniversariantes_nascimento(aniversariantes_nasc_mes_seguinte_df)
+            # self.email_nascimento.enviar_emails_gestores_aniversariantes_nascimento(aniversariantes_nasc_mes_seguinte_df)
 
             aniversariantes_nasc_do_dia_df = self.gerenciador_aniversariantes.identificar_aniversariantes_de_nascimento_do_dia(df_validos, self.data_referencia)
-            self.email_nascimento.enviar_email_individual_aniversariante_nascimento(aniversariantes_nasc_do_dia_df, self.data_referencia)
-            self.email_nascimento.enviar_email_diario_gestor_aniversariante_nascimento(aniversariantes_nasc_do_dia_df, self.data_referencia)
+            # self.email_nascimento.enviar_email_individual_aniversariante_nascimento(aniversariantes_nasc_do_dia_df, self.data_referencia)
+            # self.email_nascimento.enviar_email_diario_gestor_aniversariante_nascimento(aniversariantes_nasc_do_dia_df, self.data_referencia)
 
         finally:
             self.conexao_senior.desconectar()

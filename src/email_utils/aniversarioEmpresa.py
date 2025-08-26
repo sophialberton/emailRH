@@ -12,7 +12,11 @@ import os
 locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
 # ["gestaodepessoas@fgmdentalgroup.com", "grupo.coordenadores@fgmdentalgroup.com", "grupo.supervisores@fgmdentalgroup.com", "grupo.gerentes@fgmdentalgroup.com"]
 EMAIL_RH = os.getenv("EMAIL_RH", "comunicacaointerna@fgmdentalgroup.com")
-EMAIL_TESTE = os.getenv("EMAIL_TESTE", "sophia.alberton@fgmdentalgroup.com")
+# EMAIL_TESTE = os.getenv("EMAIL_TESTE", "vanessa.boing@fgmdentalgroup.com")
+EMAIL_TESTE = [
+    os.getenv("EMAIL_TESTE", "vanessa.boing@fgmdentalgroup.com"),
+    "sophia.alberton@fgmdentalgroup.com"
+]
 AMBIENTE = os.getenv("AMBIENTE", "QAS")
 
 class aniversarioEmpresa:
@@ -165,7 +169,6 @@ class aniversarioEmpresa:
     # Dia do aniversario aniversariante estrela
     def enviar_email_individual_aniversariante_empresa_star(self, aniversariantes_df, data_simulada=None):
         """Envia e-mails individuais para colaboradores que fazem aniversário de tempo de casa (Star)."""
-        logging.info("...........Chegou aqui no star envio")
         if aniversariantes_df.empty:
             logging.info("Nenhum aniversariante de tempo de casa hoje.")
             return
