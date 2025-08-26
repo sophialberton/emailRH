@@ -14,7 +14,7 @@ locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
 EMAIL_RH = os.getenv("EMAIL_RH", "comunicacaointerna@fgmdentalgroup.com")
 # EMAIL_TESTE = os.getenv("EMAIL_TESTE", "vanessa.boing@fgmdentalgroup.com")
 EMAIL_TESTE = [
-    os.getenv("EMAIL_TESTE", "vanessa.boing@fgmdentalgroup.com"),
+    os.getenv("EMAIL_TESTE", "sophia.albertonfgmdentalgroup.com"),
     "sophia.alberton@fgmdentalgroup.com"
 ]
 AMBIENTE = os.getenv("AMBIENTE", "QAS")
