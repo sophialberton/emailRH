@@ -42,27 +42,16 @@ def classificar_usuarios(usuarios):
             grupo_ativos['Superior'].notnull() & (grupo_ativos['Situacao_superior'] != 7)
         ]
         tem_superior_valido = not grupo_ativos_com_superior.empty
-
-        # Verifica múltiplas admissões
-        if len(grupo) > 1:
-            grupo_ordenado = grupo.sort_values('Data_admissao')
-            admissoes = grupo_ordenado['Data_admissao'].tolist()
-            demissoes = grupo_ordenado['Data_demissao'].tolist()
-            situacoes = grupo_ordenado['Situacao'].tolist()
-
-            for i in range(len(admissoes) - 1):
-                if demissoes[i] != pd.Timestamp('1900-12-31'):
-                    intervalo = (admissoes[i+1] - demissoes[i]).days
-                    if intervalo < 183 and tem_email_pessoal and tem_superior_valido:
-                        tempo1 = (demissoes[i] - admissoes[i]).days
-                        tempo2 = (datetime.today() - admissoes[i+1]).days if situacoes[i+1] != 7 else (demissoes[i+1] - admissoes[i+1]).days
-                        tempo_total = tempo1 + tempo2
-                        grupo['Tempo_empresa_dias'] = tempo_total
-                        lista_para_vanessa.append(grupo)  # inclui todos os registros do colaborador
-                        cpfs_vanessa.add(cpf)
-                        break
+        tem_multiplas_admissoes = len(grupo) > 1
+        tem_registro_ativo = not grupo_ativos.empty
 
         grupo['Tempo_empresa_dias'] = (grupo['Data_demissao'] - grupo['Data_admissao']).dt.days
+
+        # Se tem múltiplas admissões e pelo menos um registro ativo, adiciona à lista_para_vanessa
+        if tem_multiplas_admissoes and tem_registro_ativo:
+            lista_para_vanessa.append(grupo)
+            cpfs_vanessa.add(cpf)
+
         if todas_demitidas:
             invalidos_demitidos.append(grupo)
         elif not tem_email_pessoal:
@@ -73,13 +62,13 @@ def classificar_usuarios(usuarios):
                 grupo_corrigido = grupo_ativos.copy()
                 grupo_corrigido = grupo_corrigido.groupby('Cpf', as_index=False).first()
                 grupo_corrigido['Superior'] = "Posto de trabalho de superior não ocupado"
-                if cpf not in cpfs_vanessa:
-                    validos.append(grupo_corrigido)
+                validos.append(grupo_corrigido)
             else:
                 invalidos_sem_superior.append(grupo_ativos)
         else:
-            if cpf not in cpfs_vanessa:
-                validos.append(grupo_ativos_com_superior)
+            grupo_valido = grupo_ativos_com_superior
+            validos.append(grupo_valido)
+            # Se já está na lista_para_vanessa, não precisa adicionar novamente
 
     colunas = usuarios.columns.tolist() + ['Tempo_empresa_dias']
     return {
@@ -89,6 +78,7 @@ def classificar_usuarios(usuarios):
         'invalidos_sem_superior': pd.concat(invalidos_sem_superior, ignore_index=True) if invalidos_sem_superior else pd.DataFrame(columns=colunas),
         'lista_para_vanessa': pd.concat(lista_para_vanessa, ignore_index=True) if lista_para_vanessa else pd.DataFrame(columns=colunas)
     }
+
 
 def verificar_cpfs_repetidos(df):
     cpfs = df['Cpf'].astype(str).str.strip().str.zfill(11)

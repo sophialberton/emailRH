@@ -75,6 +75,8 @@ class Main:
         
             # --- Lógica de Aniversário de Empresa ---
             logging.info(">>> Processando aniversariantes de tempo de empresa...")
+            #================IMPLEMENTAR NOVA LOGICA:
+            # para aniversariantes para vanessa no mes seguinte deve se atentar que na hora de identificar aniversariatnes, se o usuario tiver a primeira admissao em outro mes ele nao vai identificar, deve considerar a primeira data de admissao mas somar com periodo da segunda admissao ate o tempo atual.
             aniversantes_para_vanessa_mes_seguinte_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte(df_lista_vanessa, self.data_referencia)
             logging.info(aniversantes_para_vanessa_mes_seguinte_df)
             # aniversariantes_mes_seguinte_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte(df_validos, self.data_referencia)
