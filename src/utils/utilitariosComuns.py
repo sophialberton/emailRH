@@ -55,6 +55,25 @@ class utilitariosComuns:
         aniversario_hoje = dados["data_nascimento"].strftime("%d/%m") == hoje.strftime("%d/%m")
         return admissao_hoje, aniversario_hoje
 
+    def gerar_corpo_email_aniversariantes_duplicados(self, saudacao, mensagem, colunas, dados, emojis=None):
+        """Gera apenas a tabela HTML do email de aniversariantes, sem assinatura final."""
+        body = f"<strong>{saudacao}</strong><br>{mensagem}<br><br>"
+        body += "<table border='1' cellpadding='5' cellspacing='0' style='border-collapse: collapse; width: 100%;'>"
+        body += "<tr style='background-color: #d3d3d3; color: black;'>"
+        for coluna in colunas:
+            body += f"<th>{coluna}</th>"
+        body += "</tr>"
+        for linha in dados:
+            body += "<tr>"
+            for i, valor in enumerate(linha):
+                emoji = emojis[i] if emojis and i < len(emojis) else ""
+                body += f"<td>{emoji} {valor}</td>"
+            body += "</tr>"
+        body += "</table>"
+        return body
+
+
+    
     def gerar_corpo_email_aniversariantes(self, saudacao, mensagem, colunas, dados, emojis=None):
         """Gera o corpo HTML do email de aniversariantes."""
         body = f"<strong>{saudacao}</strong><br>{mensagem}<br><br>"

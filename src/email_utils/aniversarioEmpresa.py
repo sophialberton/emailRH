@@ -50,25 +50,29 @@ class aniversarioEmpresa:
 
                 df['DiaMes'] = df['Data_primeira_admissao'].dt.strftime('%m-%d')
                 df = df.sort_values(by='DiaMes')
+
+                # Monta os dados da tabela apenas com as colunas desejadas
                 dados_tabela = [
                     [
                         row['Nome'],
                         row['Data_primeira_admissao'].strftime('%d/%m/%Y') if pd.notnull(row['Data_primeira_admissao']) else 'Data não disponível',
-                        row['Tempo_total_anos'],
-                        row.get('Local', 'N/A'),
-                        row.get('Superior', 'N/A')
+                        row['Tempo_total_anos']
                     ] for _, row in df.iterrows()
                 ]
-                logging.debug(f"Colunas disponíveis em '{titulo}': {df.columns.tolist()}")
-                return self.utilitariosComuns.gerar_corpo_email_aniversariantes(
-                    f"<strong>{titulo}</strong>",
+
+                colunas_tabela = EMAIL_TEMPLATES["RH_ANIVERSARIANTES_EMPRESA_DUPLICADOS"]["colunas"]
+
+                return self.utilitariosComuns.gerar_corpo_email_aniversariantes_duplicados(
+                    titulo,  # título em texto puro, será formatado com <strong> na função de corpo
                     "",
-                    EMAIL_TEMPLATES["RH_ANIVERSARIANTES_EMPRESA_DUPLICADOS"]["colunas"],
+                    colunas_tabela,
                     dados_tabela
                 )
             except Exception as e:
                 logging.info(f"Erro ao gerar tabela para '{titulo}': {e}")
                 return f"<p><strong>{titulo}:</strong> Erro ao gerar tabela.</p>"
+
+
 
         corpo_menos_6_meses = gerar_tabela(aniversariantes_df_menos_6_meses, "Retorno em menos de 6 meses")
         corpo_mais_6_meses = gerar_tabela(aniversariantes_df_mais_6_meses, "Retorno após mais de 6 meses")
