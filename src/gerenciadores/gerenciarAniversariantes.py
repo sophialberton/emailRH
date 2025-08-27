@@ -24,6 +24,51 @@ class gerenciadorAniversariantes:
         data_admissao_recente = datetime.strptime(admissoes[-1][0], "%d/%m/%Y")
         return max(datetime.now() - data_admissao_recente, timedelta(0))
 
+
+    def identificar_aniversariantes_mes_seguinte_duplicados(self, df_validos, data_simulada=None):
+        """Identifica aniversariantes de tempo de empresa no próximo mês, considerando recontratações e somando períodos."""
+
+        from datetime import datetime
+        from dateutil.relativedelta import relativedelta
+
+        data_referencia = data_simulada or datetime.now()
+        mes_seguinte = (data_referencia + relativedelta(months=1)).month
+
+        aniversariantes = []
+
+        for cpf, grupo in df_validos.groupby('Cpf'):
+            grupo = grupo.sort_values('Data_admissao').reset_index(drop=True)
+
+            # Dados principais
+            nome = grupo.iloc[-1]['Nome']
+            email = grupo.iloc[-1]['Email_pessoal']
+            primeira_admissao = grupo.iloc[0]['Data_admissao']
+
+            # Soma dos períodos trabalhados
+            total_dias = 0
+            for _, row in grupo.iterrows():
+                if pd.notnull(row['Data_demissao']):
+                    total_dias += (row['Data_demissao'] - row['Data_admissao']).days
+                else:
+                    total_dias += (datetime.now() - row['Data_admissao']).days
+
+            anos_de_casa = total_dias // 365
+
+            # Verifica se aniversário de empresa é no mês seguinte
+            if primeira_admissao.month == mes_seguinte and anos_de_casa >= 1:
+                aniversariantes.append({
+                    'Cpf': cpf,
+                    'Nome': nome,
+                    'Email': email,
+                    'Data_primeira_admissao': primeira_admissao,
+                    'Tempo_total_dias': total_dias,
+                    'Tempo_total_anos': anos_de_casa
+                })
+
+        aniversariantes_df = pd.DataFrame(aniversariantes)
+        logging.info(f"Encontrados {len(aniversariantes_df)} aniversariantes de tempo de empresa com mais de uma admissao para o próximo mês.")
+        return aniversariantes_df
+
     def identificar_aniversariantes_mes_seguinte(self, df_validos, data_simulada=None):
         """Filtra o DataFrame para encontrar aniversariantes de tempo de casa no próximo mês."""
         data_referencia = data_simulada or datetime.now()
