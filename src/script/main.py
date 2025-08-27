@@ -18,8 +18,8 @@ from utils.config import dict_extract
 from dotenv import load_dotenv, find_dotenv
 
 # Use a data atual para execução normal ou defina uma data para simulação
-# data_simulada = datetime.strptime("01/06/2025", "%d/%m/%Y")
-data_simulada = None # Descomente a linha acima e comente esta para simular
+data_simulada = datetime.strptime("01/04/2025", "%d/%m/%Y")
+# data_simulada = None # Descomente a linha acima e comente esta para simular
 
 def configurar_logs():
     log_directory = os.path.join(os.getcwd(), "Logs")
@@ -76,6 +76,7 @@ class Main:
             df_voltaram_menos_6_meses = resultados_classificacao['voltaram_menos_6_meses']
             df_voltaram_mais_6_meses = resultados_classificacao['voltaram_mais_6_meses']
             df_cadastros_menos_6_meses = resultados_classificacao['cadastros_menos_6_meses']
+            df_cadastros_mais_6_meses = resultados_classificacao['cadastros_mais_6_meses']
             
             pd.set_option('display.max_rows', None)
 
@@ -86,22 +87,28 @@ class Main:
             # logging.info(f"df_desligados_e_voltou: {df_desligados_e_voltou}")
 
             # logging.info(f"df_voltaram_menos_6_meses: {len(df_voltaram_menos_6_meses)}")
-            logging.info(f"df_voltaram_menos_6_meses: {df_voltaram_menos_6_meses}")
+            # logging.info(f"df_voltaram_menos_6_meses: {df_voltaram_menos_6_meses}")
 
             # logging.info(f"df_voltaram_mais_6_meses: {len(df_voltaram_mais_6_meses)}")
             # logging.info(f"df_voltaram_mais_6_meses: {df_voltaram_mais_6_meses}")
 
-            logging.info(f"df_cadastros_menos_6_meses: {len(df_cadastros_menos_6_meses)}")
-            logging.info(f"df_cadastros_menos_6_meses: {df_cadastros_menos_6_meses}")
+            # logging.info(f"df_cadastros_menos_6_meses: {len(df_cadastros_menos_6_meses)}")
+            # logging.info(f"df_cadastros_menos_6_meses: {df_cadastros_menos_6_meses}")
         
+            # logging.info(f"df_cadastros_mais_6_meses: {len(df_cadastros_mais_6_meses)}")
+            # logging.info(f"df_cadastros_mais_6_meses: {df_cadastros_mais_6_meses}")
+
             # --- Lógica de Aniversário de Empresa ---
             logging.info(">>> Processando aniversariantes de tempo de empresa...")
             #================IMPLEMENTAR NOVA LOGICA:
             # para aniversariantes para vanessa no mes seguinte deve se atentar que na hora de identificar aniversariatnes, se o usuario tiver a primeira admissao em outro mes ele nao vai identificar, deve considerar a primeira data de admissao mas somar com periodo da segunda admissao ate o tempo atual.
             
             # aniversariantes que voltaram em menos de 6 meses -> identificar aniversariantes deve considerar a priemira data de admissao, exibir um cadastro somando os periodos
-            aniversantes_para_vanessa_mes_seguinte_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte_duplicados(df_cadastros_menos_6_meses, self.data_referencia)
-            logging.info(aniversantes_para_vanessa_mes_seguinte_df)
+            aniversantes_para_vanessa_mes_seguinte_menos_6_meses_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte_duplicados(df_cadastros_menos_6_meses, self.data_referencia)
+            logging.info(aniversantes_para_vanessa_mes_seguinte_menos_6_meses_df)
+
+            aniversantes_para_vanessa_mes_seguinte_mais_6_meses_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte_duplicados(df_cadastros_mais_6_meses, self.data_referencia)
+            logging.info(aniversantes_para_vanessa_mes_seguinte_mais_6_meses_df)
             
             
             aniversariantes_mes_seguinte_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte(df_validos, self.data_referencia)

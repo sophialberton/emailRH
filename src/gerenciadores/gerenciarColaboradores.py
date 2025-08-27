@@ -31,6 +31,7 @@ def classificar_usuarios(usuarios):
     voltaram_menos_6_meses = []
     voltaram_mais_6_meses = []
     cadastros_menos_6_meses = []
+    cadastros_mais_6_meses = []
 
     for cpf, grupo in usuarios.groupby('Cpf'):
         if grupo['Nome'].str.contains("Mittelstadt", case=False).any():
@@ -66,6 +67,8 @@ def classificar_usuarios(usuarios):
                         cadastros_menos_6_meses.append(grupo_ordenado.iloc[i])
                     else:
                         voltaram_mais_6_meses.append(grupo_ordenado.iloc[-1])
+                        cadastros_mais_6_meses.append(grupo_ordenado.iloc[i - 1])
+                        cadastros_mais_6_meses.append(grupo_ordenado.iloc[i])
                     break  # só considera a primeira recontratação
 
 
@@ -104,7 +107,8 @@ def classificar_usuarios(usuarios):
         'desligado_e_voltou': pd.DataFrame(desligado_e_voltou) if desligado_e_voltou else pd.DataFrame(columns=colunas),
         'voltaram_menos_6_meses': pd.DataFrame(voltaram_menos_6_meses) if voltaram_menos_6_meses else pd.DataFrame(columns=colunas),
         'voltaram_mais_6_meses': pd.DataFrame(voltaram_mais_6_meses) if voltaram_mais_6_meses else pd.DataFrame(columns=colunas),
-        'cadastros_menos_6_meses': pd.DataFrame(cadastros_menos_6_meses) if cadastros_menos_6_meses else pd.DataFrame(columns=colunas)
+        'cadastros_menos_6_meses': pd.DataFrame(cadastros_menos_6_meses) if cadastros_menos_6_meses else pd.DataFrame(columns=colunas),
+        'cadastros_mais_6_meses': pd.DataFrame(cadastros_mais_6_meses) if cadastros_mais_6_meses else pd.DataFrame(columns=colunas)
     }
 
 
