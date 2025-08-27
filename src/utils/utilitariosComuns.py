@@ -71,8 +71,6 @@ class utilitariosComuns:
             body += "</tr>"
         body += "</table>"
         return body
-
-
     
     def gerar_corpo_email_aniversariantes(self, saudacao, mensagem, colunas, dados, emojis=None):
         """Gera o corpo HTML do email de aniversariantes."""

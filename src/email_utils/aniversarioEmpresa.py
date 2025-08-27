@@ -35,7 +35,7 @@ class aniversarioEmpresa:
             logging.info("Nenhum aniversariante de tempo de empresa com múltiplas admissões para o próximo mês. E-mail para Vanessa não enviado.")
             return
 
-        template = EMAIL_TEMPLATES["RH_ANIVERSARIANTES_EMPRESA"]
+        template = EMAIL_TEMPLATES["RH_ANIVERSARIANTES_EMPRESA_DUPLICADOS"]
         mes_seguinte = (data_referencia + relativedelta(months=1)).strftime("%B").title()
         assunto = f"Aniversariantes de tempo de empresa com múltiplas admissões - {mes_seguinte}"
 
@@ -74,8 +74,8 @@ class aniversarioEmpresa:
 
 
 
-        corpo_menos_6_meses = gerar_tabela(aniversariantes_df_menos_6_meses, "Retorno em menos de 6 meses")
-        corpo_mais_6_meses = gerar_tabela(aniversariantes_df_mais_6_meses, "Retorno após mais de 6 meses")
+        corpo_menos_6_meses = gerar_tabela(aniversariantes_df_menos_6_meses, "Lista dos que retornaram em menos de 6 meses fora")
+        corpo_mais_6_meses = gerar_tabela(aniversariantes_df_mais_6_meses, "Lista dos que retornaram em mais de 6 meses fora")
 
         body = f"""
         <p>{template['saudacao']}</p>
