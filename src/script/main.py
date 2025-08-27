@@ -113,6 +113,8 @@ class Main:
             
             aniversariantes_mes_seguinte_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte(df_validos, self.data_referencia)
             logging.info(aniversariantes_mes_seguinte_df)
+            
+            self.email_empresa.enviar_email_rh_aniversariante_empresa_duplicados(aniversantes_para_vanessa_mes_seguinte_mais_6_meses_df, aniversantes_para_vanessa_mes_seguinte_menos_6_meses_df, self.data_referencia)
             # self.email_empresa.enviar_email_rh_aniversariante_empresa(aniversariantes_mes_seguinte_df, self.data_referencia)
             # self.email_empresa.enviar_emails_gestores_aniversariante_empresa(aniversariantes_mes_seguinte_df, self.data_referencia)
 

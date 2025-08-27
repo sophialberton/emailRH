@@ -24,6 +24,64 @@ class aniversarioEmpresa:
         self.utilitariosComuns = utilitariosComuns()
         self.conexaoGraph = conexaoGraph()
     # Mensal RH 
+
+    def enviar_email_rh_aniversariante_empresa_duplicados(self, aniversariantes_df_mais_6_meses, aniversariantes_df_menos_6_meses, data_simulada=None):
+        """Envia o e-mail consolidado para a Vanessa com duas listas de aniversariantes de tempo de empresa com múltiplas admissões."""
+        data_referencia = data_simulada or datetime.now()
+        if AMBIENTE == "PRD" and data_referencia.day != 27:
+            logging.info("Hoje não é dia 27. E-mail para Vanessa não será enviado.")
+            return
+
+        if aniversariantes_df_mais_6_meses.empty and aniversariantes_df_menos_6_meses.empty:
+            logging.info("Nenhum aniversariante de tempo de empresa com múltiplas admissões para o próximo mês. E-mail para Vanessa não enviado.")
+            return
+
+        template = EMAIL_TEMPLATES["RH_ANIVERSARIANTES_EMPRESA"]
+        mes_seguinte = (data_referencia + relativedelta(months=1)).strftime("%B").title()
+        assunto = f"Aniversariantes de tempo de empresa com múltiplas admissões - {mes_seguinte}"
+        
+        def gerar_tabela(df, titulo):
+            if df.empty:
+                return f"<p><strong>{titulo}:</strong> Nenhum colaborador encontrado.</p>"
+
+            if 'Data_admissao' not in df.columns:
+                logging.warning(f"Coluna 'Data_admissao' não encontrada no DataFrame para: {titulo}")
+                return f"<p><strong>{titulo}:</strong> Erro ao gerar tabela - coluna 'Data_admissao' ausente.</p>"
+
+            df['DiaMes'] = df['Data_admissao'].dt.strftime('%m-%d')
+            df = df.sort_values(by='DiaMes')
+            dados_tabela = [
+                [
+                    row['Nome'],
+                    row['Data_admissao'].strftime('%d/%m/%Y') if pd.notnull(row['Data_admissao']) else 'Data não disponível',
+                    row['Tempo_empresa_anos'],
+                    row.get('Local', 'N/A'),
+                    row.get('Superior', 'N/A')
+                ] for _, row in df.iterrows()
+            ]
+            return self.utilitariosComuns.gerar_corpo_email_aniversariantes(
+                f"<strong>{titulo}</strong>",
+                "",
+                EMAIL_TEMPLATES["RH_ANIVERSARIANTES_EMPRESA_DUPLICADOS"]["colunas"],
+                dados_tabela
+            )
+
+
+        corpo_menos_6_meses = gerar_tabela(aniversariantes_df_menos_6_meses, "Retorno em menos de 6 meses")
+        corpo_mais_6_meses = gerar_tabela(aniversariantes_df_mais_6_meses, "Retorno após mais de 6 meses")
+
+        body = f"""
+        <p>{template['saudacao']}</p>
+        <p>{template['mensagem'].format(mes_seguinte=mes_seguinte)}</p>
+        {corpo_menos_6_meses}
+        <br>
+        {corpo_mais_6_meses}
+        """
+
+        logging.info(f"Enviando e-mail para Vanessa com {len(aniversariantes_df_menos_6_meses)} (menos de 6 meses) e {len(aniversariantes_df_mais_6_meses)} (mais de 6 meses) aniversariantes.")
+        self.utilitariosComuns.enviar_email_formatado(["vanessa@email.com"], assunto, body)
+
+
     def enviar_email_rh_aniversariante_empresa(self, aniversariantes_df, data_simulada=None):
         """Envia o e-mail consolidado para o RH."""
         data_referencia = data_simulada or datetime.now()
