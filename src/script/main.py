@@ -3,6 +3,7 @@ import os
 import logging
 import socket
 from datetime import datetime
+import pandas as pd
 # Adiciona o caminho da pasta 'src' ao sys.path
 src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if src_path not in sys.path:
@@ -67,18 +68,38 @@ class Main:
                 return
 
             resultados_classificacao = classificar_usuarios(colaboradores_df)
-            df_validos = resultados_classificacao['validos']
+            # df_validos = resultados_classificacao['validos']
+            # logging.info(f"Total de registros validos para processamento: {len(df_validos)}")
+
             df_lista_vanessa = resultados_classificacao['lista_para_vanessa']
+            df_desligados_e_voltou = resultados_classificacao['desligado_e_voltou']
+            df_voltaram_menos_6_meses = resultados_classificacao['voltaram_menos_6_meses']
+            df_voltaram_mais_6_meses = resultados_classificacao['voltaram_mais_6_meses']
+            df_cadastros_menos_6_meses = resultados_classificacao['cadastros_menos_6_meses']
+            
+            pd.set_option('display.max_rows', None)
+
             logging.info(f"Total de registro com mais de uma admissão: {len(df_lista_vanessa)}")
             logging.info(f"Total de registro com mais de uma admissão: {df_lista_vanessa}")
-            logging.info(f"Total de registros validos para processamento: {len(df_validos)}")
+
+            logging.info(f"df_desligados_e_voltou: {len(df_desligados_e_voltou)}")
+            logging.info(f"df_desligados_e_voltou: {df_desligados_e_voltou}")
+
+            logging.info(f"df_voltaram_menos_6_meses: {len(df_voltaram_menos_6_meses)}")
+            logging.info(f"df_voltaram_menos_6_meses: {df_voltaram_menos_6_meses}")
+
+            logging.info(f"df_voltaram_mais_6_meses: {len(df_voltaram_mais_6_meses)}")
+            logging.info(f"df_voltaram_mais_6_meses: {df_voltaram_mais_6_meses}")
+
+            logging.info(f"df_cadastros_menos_6_meses: {len(df_cadastros_menos_6_meses)}")
+            logging.info(f"df_cadastros_menos_6_meses: {df_cadastros_menos_6_meses}")
         
             # --- Lógica de Aniversário de Empresa ---
             logging.info(">>> Processando aniversariantes de tempo de empresa...")
             #================IMPLEMENTAR NOVA LOGICA:
             # para aniversariantes para vanessa no mes seguinte deve se atentar que na hora de identificar aniversariatnes, se o usuario tiver a primeira admissao em outro mes ele nao vai identificar, deve considerar a primeira data de admissao mas somar com periodo da segunda admissao ate o tempo atual.
-            aniversantes_para_vanessa_mes_seguinte_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte(df_lista_vanessa, self.data_referencia)
-            logging.info(aniversantes_para_vanessa_mes_seguinte_df)
+            # aniversantes_para_vanessa_mes_seguinte_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte(df_lista_vanessa, self.data_referencia)
+            # logging.info(aniversantes_para_vanessa_mes_seguinte_df)
             # aniversariantes_mes_seguinte_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte(df_validos, self.data_referencia)
             # self.email_empresa.enviar_email_rh_aniversariante_empresa(aniversariantes_mes_seguinte_df, self.data_referencia)
             # self.email_empresa.enviar_emails_gestores_aniversariante_empresa(aniversariantes_mes_seguinte_df, self.data_referencia)
