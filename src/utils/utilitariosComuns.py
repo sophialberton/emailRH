@@ -1,11 +1,12 @@
+# src/utils/utilitariosComuns.py
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
 import locale
 import os
 from data.conexaoGraph import conexaoGraph
 import logging
+
 locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
-# ["gestaodepessoas@fgmdentalgroup.com", "grupo.coordenadores@fgmdentalgroup.com", "grupo.supervisores@fgmdentalgroup.com", "grupo.gerentes@fgmdentalgroup.com"]
+
 EMAIL_RH = os.getenv("EMAIL_RH", "comunicacaointerna@fgmdentalgroup.com")
 EMAIL_TESTE = os.getenv("EMAIL_TESTE", "sophia.alberton@fgmdentalgroup.com")
 AMBIENTE = os.getenv("AMBIENTE", "QAS")
@@ -18,91 +19,51 @@ class utilitariosComuns:
         """Formata o nome com a primeira letra maiúscula de cada palavra."""
         return ' '.join(word.capitalize() for word in nome.split()) if nome else ""
 
-    def converter_para_datetime(data_str):
-        """Converte uma string para datetime, se necessário."""
-        return data_str if isinstance(data_str, datetime) else datetime.strptime(data_str, "%Y-%m-%d %H:%M:%S")
-
-    def converter_data_dd_mm(data_str):
-        """Converte uma data no formato dd/mm para datetime, assumindo o ano como 2024."""
-        return datetime.strptime(f"{data_str}/2024", "%d/%m/%Y")
-
-    def extrair_datas_aniversario(aniversariantes):
-        """Extrai todas as datas de aniversário da estrutura de aniversariantes."""
-        return [funcionario[1] for info in aniversariantes.values() for funcionario in info["funcionarios"]]
-
-    def extrair_dados_colaborador(colaborador):
-        """Extrai os dados relevantes de um colaborador."""
-        return {
-            "cpf": str(colaborador.NUMCPF).zfill(11),
-            "nome": utilitariosComuns.formatar_nome(colaborador.NOMFUN),
-            "email_corporativo": colaborador.EMACOM,
-            "email_pessoal": colaborador.EMAPAR,
-            "nome_usuario": colaborador.NOMUSU,
-            "situacao": colaborador.SITAFA,
-            "data_admissao": utilitariosComuns.converter_para_datetime(colaborador.DATADM),
-            "data_nascimento": utilitariosComuns.converter_para_datetime(colaborador.DATNAS),
-            "data_demissao": utilitariosComuns.converter_para_datetime(getattr(colaborador, "DATAFA", None)) if hasattr(colaborador, "DATAFA") else None,
-            "local": getattr(colaborador, "NOMLOCAL", None),
-            "estpos": getattr(colaborador, "ESTPOS", None),
-            "postra": getattr(colaborador, "POSTRA", None),
-            "supervisor_usuario": getattr(colaborador, "USERSUP", None)
-        }
-
-    def verificar_eventos_hoje(dados):
-        """Verifica se hoje é aniversário ou admissão do colaborador."""
-        hoje = datetime.now()
-        admissao_hoje = dados["data_admissao"].strftime("%d/%m/%y") == hoje.strftime("%d/%m/%y")
-        aniversario_hoje = dados["data_nascimento"].strftime("%d/%m") == hoje.strftime("%d/%m")
-        return admissao_hoje, aniversario_hoje
+    def _gerar_tabela_html(self, colunas, dados, emojis=None):
+        """Gera a estrutura de uma tabela HTML a partir de colunas e dados."""
+        tabela = "<table border='1' cellpadding='5' cellspacing='0' style='border-collapse: collapse; width: 100%;'>"
+        tabela += "<tr style='background-color: #d3d3d3; color: black;'>"
+        for coluna in colunas:
+            tabela += f"<th>{coluna}</th>"
+        tabela += "</tr>"
+        for linha in dados:
+            tabela += "<tr>"
+            for i, valor in enumerate(linha):
+                emoji = emojis[i] if emojis and i < len(emojis) else ""
+                tabela += f"<td>{emoji} {valor}</td>"
+            tabela += "</tr>"
+        tabela += "</table>"
+        return tabela
 
     def gerar_corpo_email_aniversariantes_duplicados(self, saudacao, mensagem, colunas, dados, emojis=None):
         """Gera apenas a tabela HTML do email de aniversariantes, sem assinatura final."""
-        body = f"<strong>{saudacao}</strong><br>{mensagem}<br><br>"
-        body += "<table border='1' cellpadding='5' cellspacing='0' style='border-collapse: collapse; width: 100%;'>"
-        body += "<tr style='background-color: #d3d3d3; color: black;'>"
-        for coluna in colunas:
-            body += f"<th>{coluna}</th>"
-        body += "</tr>"
-        for linha in dados:
-            body += "<tr>"
-            for i, valor in enumerate(linha):
-                emoji = emojis[i] if emojis and i < len(emojis) else ""
-                body += f"<td>{emoji} {valor}</td>"
-            body += "</tr>"
-        body += "</table>"
-        return body
-    
+        corpo = f"<strong>{saudacao}</strong><br>{mensagem}<br><br>"
+        corpo += self._gerar_tabela_html(colunas, dados, emojis)
+        return corpo
+
     def gerar_corpo_email_aniversariantes(self, saudacao, mensagem, colunas, dados, emojis=None):
         """Gera o corpo HTML do email de aniversariantes."""
-        body = f"<strong>{saudacao}</strong><br>{mensagem}<br><br>"
-        body += "<table border='1' cellpadding='5' cellspacing='0' style='border-collapse: collapse; width: 100%;'>"
-        body += "<tr style='background-color: #d3d3d3; color: black;'>"
-        for coluna in colunas:
-            body += f"<th>{coluna}</th>"
-        body += "</tr>"
-        for linha in dados:
-            body += "<tr>"
-            for i, valor in enumerate(linha):
-                emoji = emojis[i] if emojis and i < len(emojis) else ""
-                body += f"<td>{emoji} {valor}</td>"
-            body += "</tr>"
-        body += "</table>"  
-        body += "<br>Atenciosamente,<br>Equipe de Gestão de Pessoas"
-        return body
+        corpo = f"<strong>{saudacao}</strong><br>{mensagem}<br><br>"
+        corpo += self._gerar_tabela_html(colunas, dados, emojis)
+        corpo += "<br>Atenciosamente,<br>Equipe de Gestão de Pessoas"
+        return corpo
 
     def gerar_email_com_imagem(self, imagem_src, texto_alt, link=None):
         """Gera um email com imagem centralizada, com ou sem link."""
-        link_tag = f"""<a href="{link}" style="display: flex; justify-content: center; align-items: center;">""" if link else "<a style='display: flex; justify-content: center; align-items: center;'>"
+        link_tag = f'<a href="{link}" style="display: flex; justify-content: center; align-items: center;">' if link else '<a style="display: flex; justify-content: center; align-items: center;">'
         return f"""<html><body style="display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
                     {link_tag}
                         <img src="{imagem_src}" alt="{texto_alt}">
                     </a></body></html>"""
-    
+
     def enviar_email_formatado(self, destinatarios, assunto, body):
         """Função auxiliar para enviar e-mails, tratando ambiente de QAS/PRD."""
         if not destinatarios:
             logging.warning("Nenhum destinatário para o e-mail.")
             return
 
-        email_para_envio = EMAIL_TESTE.split(",") if AMBIENTE == "QAS" else destinatarios
+        email_para_envio = destinatarios
+        if AMBIENTE == "QAS":
+            email_para_envio = EMAIL_TESTE.split(',') if isinstance(EMAIL_TESTE, str) else [EMAIL_TESTE]
+
         self.conexaoGraph.enviar_email(email_para_envio, assunto, body)
