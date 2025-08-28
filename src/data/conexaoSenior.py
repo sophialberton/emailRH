@@ -82,29 +82,61 @@ class conexaoSenior:
                     FUN.DATADM AS "Data_admissao",
                     FUN.DATAFA AS "Data_demissao",
                     FUN.DATNAS AS "Data_nascimento",
+                    TO_CHAR(ROUND((SYSDATE - FUN.DATADM) / 365.25, 2)) AS "Tempo_FGM",
                     O.GESTOR AS "Superior",
                     EMG.EMACOM AS "Email_superior",
                     ORN.NOMLOC AS "Local",
                     GEST.SITAFA AS "Situacao_superior"
                 FROM
                     SENIOR.R034FUN FUN
-                INNER JOIN SENIOR.R030EMP EMP ON FUN.NUMEMP = EMP.NUMEMP
-                INNER JOIN SENIOR.R024CAR CAR ON FUN.CODCAR = CAR.CODCAR AND FUN.ESTCAR = CAR.ESTCAR
-                INNER JOIN SENIOR.R034CPL EM ON FUN.NUMCAD = EM.NUMCAD AND FUN.NUMEMP = EM.NUMEMP
-                INNER JOIN SENIOR.R016ORN ORN ON ORN.NUMLOC = FUN.NUMLOC
-                INNER JOIN SENIOR.R030FIL FIL ON FUN.CODFIL = FIL.CODFIL AND FUN.NUMEMP = FIL.NUMEMP
+                INNER JOIN SENIOR.R030EMP EMP ON
+                    FUN.NUMEMP = EMP.NUMEMP
+                INNER JOIN SENIOR.R024CAR CAR ON
+                    FUN.CODCAR = CAR.CODCAR
+                    AND FUN.ESTCAR = CAR.ESTCAR
+                INNER JOIN SENIOR.R034CPL EM ON
+                    FUN.NUMCAD = EM.NUMCAD
+                    AND FUN.NUMEMP = EM.NUMEMP
+                INNER JOIN SENIOR.R016ORN ORN ON
+                    ORN.NUMLOC = FUN.NUMLOC
+                INNER JOIN SENIOR.R030FIL FIL ON
+                    FUN.CODFIL = FIL.CODFIL
+                    AND FUN.NUMEMP = FIL.NUMEMP
                 LEFT JOIN (
                     SELECT
-                        A.ESTPOS, A.POSTRA, C.NUMCAD AS NUMCAD_GESTOR, C.NUMEMP AS NUMEMP_GESTOR, C.NOMFUN AS GESTOR
-                    FROM SENIOR.R017HIE A
-                    LEFT JOIN SENIOR.R017HIE B ON SUBSTR(A.POSPOS, 1, LENGTH(A.POSPOS)-2) = B.POSPOS AND A.ESTPOS = B.ESTPOS AND A.CODTHP = B.CODTHP AND A.REVHIE = B.REVHIE
-                    LEFT JOIN SENIOR.R034FUN C ON B.ESTPOS = C.ESTPOS AND B.POSTRA = C.POSTRA
-                    WHERE A.CODTHP = 1
-                ) O ON FUN.ESTPOS = O.ESTPOS AND FUN.POSTRA = O.POSTRA
-                LEFT JOIN SENIOR.R034CPL EMG ON O.NUMCAD_GESTOR = EMG.NUMCAD AND O.NUMEMP_GESTOR = EMG.NUMEMP
-                LEFT JOIN SENIOR.R034FUN GEST ON O.NUMCAD_GESTOR = GEST.NUMCAD AND O.NUMEMP_GESTOR = GEST.NUMEMP
-                WHERE FUN.TIPCOL = 1 AND CAR.TITCAR <> 'PENSIONISTA' AND FUN.NUMEMP <> 100
-                ORDER BY FUN.NUMCPF, FUN.DATADM
+                        A.ESTPOS,
+                        A.POSTRA,
+                        C.NUMCAD AS NUMCAD_GESTOR,
+                        C.NUMEMP AS NUMEMP_GESTOR,
+                        C.NOMFUN AS GESTOR
+                    FROM
+                        SENIOR.R017HIE A
+                    LEFT JOIN SENIOR.R017HIE B ON
+                        SUBSTR(A.POSPOS, 1, LENGTH(A.POSPOS)-2) = B.POSPOS
+                            AND A.ESTPOS = B.ESTPOS
+                            AND A.CODTHP = B.CODTHP
+                            AND A.REVHIE = B.REVHIE
+                        LEFT JOIN SENIOR.R034FUN C ON
+                            B.ESTPOS = C.ESTPOS
+                            AND B.POSTRA = C.POSTRA
+                        WHERE
+                            A.CODTHP = 1
+                ) O ON
+                    FUN.ESTPOS = O.ESTPOS
+                    AND FUN.POSTRA = O.POSTRA
+                LEFT JOIN SENIOR.R034CPL EMG ON
+                    O.NUMCAD_GESTOR = EMG.NUMCAD
+                    AND O.NUMEMP_GESTOR = EMG.NUMEMP
+                LEFT JOIN SENIOR.R034FUN GEST ON
+                    O.NUMCAD_GESTOR = GEST.NUMCAD
+                    AND O.NUMEMP_GESTOR = GEST.NUMEMP
+                WHERE
+                    FUN.TIPCOL = 1
+                    AND CAR.TITCAR <> 'PENSIONISTA'
+                    AND FUN.NUMEMP <> 100
+                ORDER BY
+                    FUN.NUMCPF,
+                    FUN.DATADM
                 """
         try:
             logging.info("-------------->>>Query---------------------------------")
@@ -113,7 +145,7 @@ class conexaoSenior:
             # Renomeia as colunas para o padrão do projeto
             df.columns = [
                 'Cpf','Nome','Situacao','Matricula','Email_pessoal','Email_corporativo',
-                'Data_admissao','Data_demissao','Data_nascimento','Superior', 'Email_superior',
+                'Data_admissao','Data_demissao','Data_nascimento','Tempo_FGM','Superior', 'Email_superior',
                 'Local','Situacao_superior'
             ]
             logging.info(f">Consulta executada com sucesso. {len(df)} registros encontrados.")
