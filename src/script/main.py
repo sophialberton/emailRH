@@ -62,13 +62,14 @@ class Main:
 
         try:
             colaboradores_df = self.conexao_senior.consultaDadosSenior()
-
             if colaboradores_df.empty:
                 logging.warning("Nenhum colaborador encontrado na consulta. Encerrando execucao.")
                 return
+            
+            pd.set_option('display.max_columns', None)
 
             resultados_classificacao = classificar_usuarios(colaboradores_df, self.data_referencia)
-            df_validos = resultados_classificacao['validos']
+            # df_validos = resultados_classificacao['validos']
             # logging.info(f"Total de registros validos para processamento: {len(df_validos)}")
 
             df_lista_vanessa = resultados_classificacao['lista_para_vanessa']
@@ -77,45 +78,49 @@ class Main:
             df_voltaram_mais_6_meses = resultados_classificacao['voltaram_mais_6_meses']
             df_cadastros_menos_6_meses = resultados_classificacao['cadastros_menos_6_meses']
             df_cadastros_mais_6_meses = resultados_classificacao['cadastros_mais_6_meses']
+            df_invalidos_tempo_fgm_duplicado = resultados_classificacao['invalidos_tempo_fgm_duplicado']
+
             
-            pd.set_option('display.max_rows', None)
+            # logging.info(colaboradores_df.iloc[50:56].to_string(index=False))
 
-            # logging.info(f"Total de cadastros com mais de uma admissão: {len(df_lista_vanessa)}")
-            logging.info(f"Total de cadastros com mais de uma admissão: {df_lista_vanessa}")
+            logging.info(f"Total de cadastros com mais de uma admissão: {len(df_lista_vanessa)}")
+            logging.info(f"Total de cadastros com mais de uma admissão:\n {df_lista_vanessa[['Nome', 'Situacao', 'Matricula', 'Data_admissao', 'Data_demissao', 'Tempo_FGM']].to_string(index=False)}")
 
-            # logging.info(f"df_desligados_e_voltou: {len(df_desligados_e_voltou)}")
-            # logging.info(f"df_desligados_e_voltou: {df_desligados_e_voltou}")
+            logging.info(f"df_desligados_e_voltou: {len(df_desligados_e_voltou)}")
+            logging.info(f"df_desligados_e_voltou:\n {df_desligados_e_voltou[['Nome', 'Situacao', 'Matricula', 'Data_admissao', 'Data_demissao', 'Tempo_FGM']].to_string(index=False)}")
 
-            # logging.info(f"df_voltaram_menos_6_meses: {len(df_voltaram_menos_6_meses)}")
-            # logging.info(f"df_voltaram_menos_6_meses: {df_voltaram_menos_6_meses}")
+            logging.info(f'df_invalidos_tempo_fgm_duplicado:\n {df_invalidos_tempo_fgm_duplicado[['Nome', 'Situacao', 'Matricula', 'Data_admissao', 'Data_demissao', 'Tempo_FGM']].to_string(index=False)}')
 
-            # logging.info(f"df_voltaram_mais_6_meses: {len(df_voltaram_mais_6_meses)}")
-            # logging.info(f"df_voltaram_mais_6_meses: {df_voltaram_mais_6_meses}")
+            logging.info(f"df_voltaram_menos_6_meses: {len(df_voltaram_menos_6_meses)}")
+            logging.info(f"df_voltaram_menos_6_meses:\n {df_voltaram_menos_6_meses[['Nome', 'Situacao', 'Matricula', 'Data_admissao', 'Data_demissao', 'Tempo_FGM']].to_string(index=False)}")
+
+            logging.info(f"df_voltaram_mais_6_meses: {len(df_voltaram_mais_6_meses)}")
+            logging.info(f"df_voltaram_mais_6_meses:\n {df_voltaram_mais_6_meses[['Nome', 'Situacao', 'Matricula', 'Data_admissao', 'Data_demissao', 'Tempo_FGM']].to_string(index=False)}")
 
             logging.info(f"df_cadastros_menos_6_meses: {len(df_cadastros_menos_6_meses)}")
-            logging.info(f"df_cadastros_menos_6_meses: {df_cadastros_menos_6_meses}")
+            logging.info(f"df_cadastros_menos_6_meses:\n {df_cadastros_menos_6_meses[['Nome', 'Situacao', 'Matricula', 'Data_admissao', 'Data_demissao', 'Tempo_FGM']].to_string(index=False)}")
         
             logging.info(f"df_cadastros_mais_6_meses: {len(df_cadastros_mais_6_meses)}")
-            logging.info(f"df_cadastros_mais_6_meses: {df_cadastros_mais_6_meses}")
+            logging.info(f"df_cadastros_mais_6_meses:\n{df_cadastros_mais_6_meses[['Nome', 'Situacao', 'Matricula', 'Data_admissao', 'Data_demissao', 'Tempo_FGM']].to_string(index=False)}")
 
             # --- Lógica de Aniversário de Empresa ---
-            logging.info(">>> Processando aniversariantes de tempo de empresa...")
+            # logging.info(">>> Processando aniversariantes de tempo de empresa...")
             #================IMPLEMENTAR NOVA LOGICA:
             # para aniversariantes para vanessa no mes seguinte deve se atentar que na hora de identificar aniversariatnes, se o usuario tiver a primeira admissao em outro mes ele nao vai identificar, deve considerar a primeira data de admissao mas somar com periodo da segunda admissao ate o tempo atual.
             
             # aniversariantes que voltaram em menos de 6 meses -> identificar aniversariantes deve considerar a priemira data de admissao, exibir um cadastro somando os periodos
-            aniversantes_para_vanessa_mes_seguinte_menos_6_meses_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte_duplicados(df_cadastros_menos_6_meses, self.data_referencia)
-            logging.info(aniversantes_para_vanessa_mes_seguinte_menos_6_meses_df)
+            # aniversantes_para_vanessa_mes_seguinte_menos_6_meses_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte_duplicados(df_cadastros_menos_6_meses, self.data_referencia)
+            # logging.info(aniversantes_para_vanessa_mes_seguinte_menos_6_meses_df)
 
-            aniversantes_para_vanessa_mes_seguinte_mais_6_meses_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte_duplicados(df_cadastros_mais_6_meses, self.data_referencia)
-            logging.info(aniversantes_para_vanessa_mes_seguinte_mais_6_meses_df)
+            # aniversantes_para_vanessa_mes_seguinte_mais_6_meses_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte_duplicados(df_cadastros_mais_6_meses, self.data_referencia)
+            # logging.info(aniversantes_para_vanessa_mes_seguinte_mais_6_meses_df)
             
             
-            aniversariantes_mes_seguinte_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte(df_validos, self.data_referencia)
-            logging.info(aniversariantes_mes_seguinte_df)
+            # aniversariantes_mes_seguinte_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte(df_validos, self.data_referencia)
+            # logging.info(aniversariantes_mes_seguinte_df)
 
-            self.email_empresa.enviar_email_rh_aniversariante_empresa_duplicados(aniversantes_para_vanessa_mes_seguinte_mais_6_meses_df, aniversantes_para_vanessa_mes_seguinte_menos_6_meses_df, self.data_referencia)
-            self.email_empresa.enviar_email_rh_aniversariante_empresa(aniversariantes_mes_seguinte_df, self.data_referencia)
+            # self.email_empresa.enviar_email_rh_aniversariante_empresa_duplicados(aniversantes_para_vanessa_mes_seguinte_mais_6_meses_df, aniversantes_para_vanessa_mes_seguinte_menos_6_meses_df, self.data_referencia)
+            # self.email_empresa.enviar_email_rh_aniversariante_empresa(aniversariantes_mes_seguinte_df, self.data_referencia)
             # self.email_empresa.enviar_emails_gestores_aniversariante_empresa(aniversariantes_mes_seguinte_df, self.data_referencia)
 
             # aniversariantes_do_dia_df = self.gerenciador_aniversariantes.identificar_aniversariantes_do_dia(df_validos, self.data_referencia)

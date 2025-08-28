@@ -14,25 +14,27 @@ import pandas as pd
 from datetime import timedelta
 
 def classificar_usuarios(usuarios, data_simulada=None):
-
+    # Preparação dos dados
     usuarios['Cpf'] = usuarios['Cpf'].astype(str).str.strip().str.zfill(11)
     usuarios['Situacao'] = usuarios['Situacao'].astype(int)
     usuarios['Situacao_superior'] = usuarios['Situacao_superior'].fillna(0).astype(int)
     usuarios['Data_admissao'] = pd.to_datetime(usuarios['Data_admissao'])
     usuarios['Data_demissao'] = pd.to_datetime(usuarios['Data_demissao'])
 
-    # Corrigir demissões inválidas
-    usuarios['Data_demissao_corrigida'] = usuarios.apply(
-        lambda row: row['Data_demissao'] if pd.notnull(row['Data_demissao']) and row['Data_demissao'] >= row['Data_admissao'] else data_simulada,
-        axis=1
-    )
+    # Corrigir demissões inválidas diretamente na coluna original
+    usuarios.loc[usuarios['Data_demissao'] < usuarios['Data_admissao'], 'Data_demissao'] = data_simulada
 
+    # Arredondar Tempo_FGM para anos inteiros
+    usuarios['Tempo_FGM_anos'] = pd.to_numeric(usuarios['Tempo_FGM'], errors='coerce').round()
+
+
+    # Listas de classificação
     validos = []
     invalidos_demitidos = []
     invalidos_sem_email = []
     invalidos_sem_superior = []
+    invalidos_tempo_fgm_duplicado = []
     lista_para_vanessa = []
-
     desligado_e_voltou = []
     voltaram_menos_6_meses = []
     voltaram_mais_6_meses = []
@@ -46,8 +48,19 @@ def classificar_usuarios(usuarios, data_simulada=None):
         tem_multiplas_admissoes = len(grupo) > 1
         tem_registro_ativo = not grupo_ativos.empty
 
-        grupo['Tempo_empresa_dias'] = (grupo['Data_demissao_corrigida'] - grupo['Data_admissao']).dt.days
-        grupo['Tempo_empresa_anos'] = grupo['Tempo_empresa_dias'] // 365
+        # Nova lógica de duplicados com base em Tempo_FGM
+        grupo_ativos = grupo[grupo['Situacao'] != 7]
+        if not grupo_ativos.empty:
+            data_admissao_ativa = grupo_ativos.iloc[0]['Data_admissao']
+            grupo_duplicado = grupo[(grupo['Data_admissao'] == data_admissao_ativa) & (grupo['Situacao'] == 7)]
+            grupo_sem_duplicados = grupo.drop(grupo_duplicado.index)
+
+            if not grupo_duplicado.empty:
+                invalidos_tempo_fgm_duplicado.append(grupo_duplicado)
+
+            # Continue o processamento com grupo_sem_duplicados
+            grupo = grupo_sem_duplicados
+
 
         if tem_multiplas_admissoes and tem_registro_ativo and not grupo_demitidos.empty:
             lista_para_vanessa.append(grupo)
@@ -57,7 +70,7 @@ def classificar_usuarios(usuarios, data_simulada=None):
             grupo_ordenado = grupo.reset_index(drop=True)
             for i in range(1, len(grupo_ordenado)):
                 admissao_atual = grupo_ordenado.loc[i, 'Data_admissao']
-                demissao_anterior = grupo_ordenado.loc[i - 1, 'Data_demissao_corrigida']
+                demissao_anterior = grupo_ordenado.loc[i - 1, 'Data_demissao']
                 if pd.notnull(demissao_anterior) and pd.notnull(admissao_atual):
                     intervalo = admissao_atual - demissao_anterior
                     destino_lista = (
@@ -67,7 +80,7 @@ def classificar_usuarios(usuarios, data_simulada=None):
                     )
                     destino_lista[0].append(grupo_ordenado.iloc[-1])
                     for _, row in grupo_ordenado.iterrows():
-                        if row['Data_admissao'] != row['Data_demissao_corrigida']:
+                        if row['Data_admissao'] != row['Data_demissao']:
                             destino_lista[1].append(row)
                     break
 
@@ -94,7 +107,7 @@ def classificar_usuarios(usuarios, data_simulada=None):
         else:
             validos.append(grupo_ativos_com_superior)
 
-    colunas = usuarios.columns.tolist() + ['Data_demissao_corrigida', 'Tempo_empresa_dias', 'Tempo_empresa_anos']
+    colunas = usuarios.columns.tolist()
     return {
         'validos': pd.concat(validos, ignore_index=True) if validos else pd.DataFrame(columns=colunas),
         'invalidos_demitidos': pd.concat(invalidos_demitidos, ignore_index=True) if invalidos_demitidos else pd.DataFrame(columns=colunas),
@@ -105,7 +118,8 @@ def classificar_usuarios(usuarios, data_simulada=None):
         'voltaram_menos_6_meses': pd.DataFrame(voltaram_menos_6_meses) if voltaram_menos_6_meses else pd.DataFrame(columns=colunas),
         'voltaram_mais_6_meses': pd.DataFrame(voltaram_mais_6_meses) if voltaram_mais_6_meses else pd.DataFrame(columns=colunas),
         'cadastros_menos_6_meses': pd.DataFrame(cadastros_menos_6_meses) if cadastros_menos_6_meses else pd.DataFrame(columns=colunas),
-        'cadastros_mais_6_meses': pd.DataFrame(cadastros_mais_6_meses) if cadastros_mais_6_meses else pd.DataFrame(columns=colunas)
+        'cadastros_mais_6_meses': pd.DataFrame(cadastros_mais_6_meses) if cadastros_mais_6_meses else pd.DataFrame(columns=colunas),
+        'invalidos_tempo_fgm_duplicado': pd.concat(invalidos_tempo_fgm_duplicado, ignore_index=True) if invalidos_tempo_fgm_duplicado else pd.DataFrame(columns=colunas)
     }
 
 def verificar_cpfs_repetidos(df):
