@@ -43,7 +43,7 @@ class gerenciadorAniversariantes:
             email = grupo.iloc[-1]['Email_pessoal']
             primeira_admissao = grupo.iloc[0]['Data_admissao']
 
-            # Soma dos períodos trabalhados
+            # Soma dos períodos trabalhados até a data simulada
             total_dias = 0
             for _, row in grupo.iterrows():
                 admissao = row['Data_admissao']
@@ -52,10 +52,10 @@ class gerenciadorAniversariantes:
                 if pd.notnull(demissao):
                     total_dias += (demissao - admissao).days
                 else:
+                    # Se ainda está ativo, soma até a data simulada
                     total_dias += (data_referencia - admissao).days
 
             anos_de_casa = total_dias // 365
-
             # Verifica se a primeira admissão é no mês seguinte
             if primeira_admissao.month == mes_seguinte and anos_de_casa >= 1:
                 aniversariantes.append({
@@ -70,7 +70,6 @@ class gerenciadorAniversariantes:
         aniversariantes_df = pd.DataFrame(aniversariantes)
         logging.info(f"Encontrados {len(aniversariantes_df)} aniversariantes de tempo de empresa com mais de uma admissao para o próximo mês.")
         return aniversariantes_df
-
 
     def identificar_aniversariantes_mes_seguinte(self, df_validos, data_simulada=None):
         """Filtra o DataFrame para encontrar aniversariantes de tempo de casa no próximo mês."""

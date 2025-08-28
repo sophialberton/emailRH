@@ -67,7 +67,7 @@ class Main:
                 logging.warning("Nenhum colaborador encontrado na consulta. Encerrando execucao.")
                 return
 
-            resultados_classificacao = classificar_usuarios(colaboradores_df)
+            resultados_classificacao = classificar_usuarios(colaboradores_df, self.data_referencia)
             df_validos = resultados_classificacao['validos']
             # logging.info(f"Total de registros validos para processamento: {len(df_validos)}")
 
@@ -81,13 +81,13 @@ class Main:
             pd.set_option('display.max_rows', None)
 
             # logging.info(f"Total de cadastros com mais de uma admissão: {len(df_lista_vanessa)}")
-            # logging.info(f"Total de cadastros com mais de uma admissão: {df_lista_vanessa}")
+            logging.info(f"Total de cadastros com mais de uma admissão: {df_lista_vanessa}")
 
             # logging.info(f"df_desligados_e_voltou: {len(df_desligados_e_voltou)}")
             # logging.info(f"df_desligados_e_voltou: {df_desligados_e_voltou}")
 
-            logging.info(f"df_voltaram_menos_6_meses: {len(df_voltaram_menos_6_meses)}")
-            logging.info(f"df_voltaram_menos_6_meses: {df_voltaram_menos_6_meses}")
+            # logging.info(f"df_voltaram_menos_6_meses: {len(df_voltaram_menos_6_meses)}")
+            # logging.info(f"df_voltaram_menos_6_meses: {df_voltaram_menos_6_meses}")
 
             # logging.info(f"df_voltaram_mais_6_meses: {len(df_voltaram_mais_6_meses)}")
             # logging.info(f"df_voltaram_mais_6_meses: {df_voltaram_mais_6_meses}")
@@ -95,8 +95,8 @@ class Main:
             logging.info(f"df_cadastros_menos_6_meses: {len(df_cadastros_menos_6_meses)}")
             logging.info(f"df_cadastros_menos_6_meses: {df_cadastros_menos_6_meses}")
         
-            # logging.info(f"df_cadastros_mais_6_meses: {len(df_cadastros_mais_6_meses)}")
-            # logging.info(f"df_cadastros_mais_6_meses: {df_cadastros_mais_6_meses}")
+            logging.info(f"df_cadastros_mais_6_meses: {len(df_cadastros_mais_6_meses)}")
+            logging.info(f"df_cadastros_mais_6_meses: {df_cadastros_mais_6_meses}")
 
             # --- Lógica de Aniversário de Empresa ---
             logging.info(">>> Processando aniversariantes de tempo de empresa...")

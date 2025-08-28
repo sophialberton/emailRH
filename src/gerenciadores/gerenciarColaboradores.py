@@ -13,13 +13,19 @@ import logging
 import pandas as pd
 from datetime import timedelta
 
-def classificar_usuarios(usuarios):
-    logging.info("Classificando usuarios")
+def classificar_usuarios(usuarios, data_simulada=None):
+
     usuarios['Cpf'] = usuarios['Cpf'].astype(str).str.strip().str.zfill(11)
     usuarios['Situacao'] = usuarios['Situacao'].astype(int)
     usuarios['Situacao_superior'] = usuarios['Situacao_superior'].fillna(0).astype(int)
     usuarios['Data_admissao'] = pd.to_datetime(usuarios['Data_admissao'])
     usuarios['Data_demissao'] = pd.to_datetime(usuarios['Data_demissao'])
+
+    # Corrigir demissões inválidas
+    usuarios['Data_demissao_corrigida'] = usuarios.apply(
+        lambda row: row['Data_demissao'] if pd.notnull(row['Data_demissao']) and row['Data_demissao'] >= row['Data_admissao'] else data_simulada,
+        axis=1
+    )
 
     validos = []
     invalidos_demitidos = []
@@ -34,46 +40,37 @@ def classificar_usuarios(usuarios):
     cadastros_mais_6_meses = []
 
     for cpf, grupo in usuarios.groupby('Cpf'):
-        if grupo['Nome'].str.contains("Mittelstadt", case=False).any():
-            continue
-        if grupo['Superior'].str.contains("Bianca De Oliveira Luiz Mittelstadt", case=False, na=False).any():
-            continue
-
         grupo = grupo.sort_values('Data_admissao')
         grupo_ativos = grupo[grupo['Situacao'] != 7]
         grupo_demitidos = grupo[grupo['Situacao'] == 7]
         tem_multiplas_admissoes = len(grupo) > 1
         tem_registro_ativo = not grupo_ativos.empty
-        grupo['Tempo_empresa_dias'] = (grupo['Data_demissao'] - grupo['Data_admissao']).dt.days
+
+        grupo['Tempo_empresa_dias'] = (grupo['Data_demissao_corrigida'] - grupo['Data_admissao']).dt.days
         grupo['Tempo_empresa_anos'] = grupo['Tempo_empresa_dias'] // 365
 
-        # Lista principal para Vanessa
         if tem_multiplas_admissoes and tem_registro_ativo and not grupo_demitidos.empty:
             lista_para_vanessa.append(grupo)
-            ultimo_cadastro = grupo.sort_values('Data_admissao').iloc[-1]
+            ultimo_cadastro = grupo.iloc[-1]
             desligado_e_voltou.append(ultimo_cadastro)
 
-
-            # Verifica recontratação e calcula intervalo
-            grupo_ordenado = grupo.sort_values('Data_admissao').reset_index(drop=True)
+            grupo_ordenado = grupo.reset_index(drop=True)
             for i in range(1, len(grupo_ordenado)):
                 admissao_atual = grupo_ordenado.loc[i, 'Data_admissao']
-                demissao_anterior = grupo_ordenado.loc[i - 1, 'Data_demissao']
+                demissao_anterior = grupo_ordenado.loc[i - 1, 'Data_demissao_corrigida']
                 if pd.notnull(demissao_anterior) and pd.notnull(admissao_atual):
                     intervalo = admissao_atual - demissao_anterior
-                    if intervalo < timedelta(days=180):
-                        voltaram_menos_6_meses.append(grupo_ordenado.iloc[-1])  # último cadastro
-                        cadastros_menos_6_meses.append(grupo_ordenado.iloc[i - 1])
-                        cadastros_menos_6_meses.append(grupo_ordenado.iloc[i])
-                    else:
-                        voltaram_mais_6_meses.append(grupo_ordenado.iloc[-1])
-                        cadastros_mais_6_meses.append(grupo_ordenado.iloc[i - 1])
-                        cadastros_mais_6_meses.append(grupo_ordenado.iloc[i])
-                    break  # só considera a primeira recontratação
+                    destino_lista = (
+                        (voltaram_menos_6_meses, cadastros_menos_6_meses)
+                        if intervalo < timedelta(days=180)
+                        else (voltaram_mais_6_meses, cadastros_mais_6_meses)
+                    )
+                    destino_lista[0].append(grupo_ordenado.iloc[-1])
+                    for _, row in grupo_ordenado.iterrows():
+                        if row['Data_admissao'] != row['Data_demissao_corrigida']:
+                            destino_lista[1].append(row)
+                    break
 
-
-
-        # Classificação de validade
         todas_demitidas = grupo['Situacao'].eq(7).all()
         tem_email_pessoal = grupo_ativos['Email_pessoal'].notnull().any()
         grupo_ativos_com_superior = grupo_ativos[
@@ -97,7 +94,7 @@ def classificar_usuarios(usuarios):
         else:
             validos.append(grupo_ativos_com_superior)
 
-    colunas = usuarios.columns.tolist() + ['Tempo_empresa_dias', 'Tempo_empresa_anos']
+    colunas = usuarios.columns.tolist() + ['Data_demissao_corrigida', 'Tempo_empresa_dias', 'Tempo_empresa_anos']
     return {
         'validos': pd.concat(validos, ignore_index=True) if validos else pd.DataFrame(columns=colunas),
         'invalidos_demitidos': pd.concat(invalidos_demitidos, ignore_index=True) if invalidos_demitidos else pd.DataFrame(columns=colunas),
@@ -110,7 +107,6 @@ def classificar_usuarios(usuarios):
         'cadastros_menos_6_meses': pd.DataFrame(cadastros_menos_6_meses) if cadastros_menos_6_meses else pd.DataFrame(columns=colunas),
         'cadastros_mais_6_meses': pd.DataFrame(cadastros_mais_6_meses) if cadastros_mais_6_meses else pd.DataFrame(columns=colunas)
     }
-
 
 def verificar_cpfs_repetidos(df):
     cpfs = df['Cpf'].astype(str).str.strip().str.zfill(11)
