@@ -50,18 +50,26 @@ def classificar_usuarios(usuarios):
 
         grupo = grupo.sort_values('Data_admissao').reset_index(drop=True)
         grupo_ativos = grupo[grupo['Situacao'] != 7]
-
-        duplicado = _identificar_duplicados(grupo)
-        if duplicado is not None:
-            cadastros_duplicados.append(duplicado)
-
-        if grupo['Situacao'].eq(7).all():
+        
+        # --- LÓGICA DE CORREÇÃO ---
+        # Primeiro, verificar se é um caso de readmissão.
+        # Se for, ele vai para a lista de duplicados e não deve entrar na outra classificação.
+        if len(grupo) > 1 and not grupo_ativos.empty and any(grupo['Situacao'] == 7):
+            demissao_anterior = grupo.loc[len(grupo) - 2, 'Data_demissao']
+            admissao_recente = grupo.loc[len(grupo) - 1, 'Data_admissao']
+            intervalo = (admissao_recente - demissao_anterior).days
+            grupo['Retorno_em_menos_de_6_meses'] = intervalo < 180
+            cadastros_duplicados.append(grupo)
+        
+        # Se não for um caso de readmissão, então ele entra na classificação normal.
+        elif grupo['Situacao'].eq(7).all():
             invalidos_demitidos.append(grupo)
         elif not grupo_ativos['Email_pessoal'].notnull().any():
             invalidos_sem_email.append(grupo_ativos)
         elif not (grupo_ativos['Superior'].notnull() & (grupo_ativos['Situacao_superior'] != 7)).any():
             invalidos_sem_superior.append(grupo_ativos)
         else:
+            # Garante que apenas o registro mais recente e ativo seja considerado válido
             registro_valido = grupo_ativos.sort_values('Data_admissao', ascending=False).iloc[[0]]
             validos.append(registro_valido)
 
