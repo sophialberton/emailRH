@@ -24,7 +24,7 @@ from utils.config import dict_extract
 # Para testar o comportamento do script em uma data específica,
 # descomente a linha abaixo e defina a data desejada.
 # Se 'data_simulada' for None, o script usará a data atual.
-data_simulada = datetime.strptime("01/06/2025", "%d/%m/%Y")
+data_simulada = datetime.strptime("01/04/2025", "%d/%m/%Y")
 # data_simulada = None
 
 def configurar_logs():
@@ -53,7 +53,7 @@ class Main:
         self.email_nascimento = aniversarioNascimento()
         self.data_referencia = data_simulada or datetime.now()
 
-    def processar_aniversariantes_empresa(self, df_validos, df_duplicados):
+    def processar_aniversariantes_empresa(self, df_validos, df_duplicados, cadastros_menos_6_meses, cadastros_mais_6_meses):
         """Método focado em todo o fluxo de aniversários de tempo de empresa."""
         logging.info(">>> Processando aniversariantes de tempo de empresa...")
         
@@ -61,8 +61,14 @@ class Main:
         if not df_duplicados.empty:
             aniversariantes_duplicados_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte_duplicados(df_duplicados, self.data_referencia)
             # Separa as duas listas para o e-mail da Vanessa
-            mais_6_meses_df = aniversariantes_duplicados_df[~aniversariantes_duplicados_df['Retorno_em_menos_de_6_meses']]
-            menos_6_meses_df = aniversariantes_duplicados_df[aniversariantes_duplicados_df['Retorno_em_menos_de_6_meses']]
+            menos_6_meses_df = aniversariantes_duplicados_df[
+                aniversariantes_duplicados_df['Nome'].isin(cadastros_menos_6_meses['Nome'])
+            ]
+            mais_6_meses_df = aniversariantes_duplicados_df[
+                aniversariantes_duplicados_df['Nome'].isin(cadastros_mais_6_meses['Nome'])
+            ]
+            # mais_6_meses_df = aniversariantes_duplicados_df[~aniversariantes_duplicados_df['Retorno_em_menos_de_6_meses']]
+            # menos_6_meses_df = aniversariantes_duplicados_df[aniversariantes_duplicados_df['Retorno_em_menos_de_6_meses']]
             self.email_empresa.enviar_email_rh_aniversariante_empresa_duplicados(mais_6_meses_df, menos_6_meses_df, self.data_referencia)
 
         # --- LÓGICA MENSAL PARA COLABORADORES COM CADASTRO ÚNICO ---
@@ -116,9 +122,11 @@ class Main:
             resultados = classificar_usuarios(colaboradores_df)
             df_validos = resultados['validos']
             df_duplicados = resultados['cadastros_duplicados']
+            cadastros_menos_6_meses = resultados['cadastros_menos_6_meses']
+            cadastros_mais_6_meses = resultados['cadastros_mais_6_meses']
 
             # 3. Executa os fluxos de processamento para cada tipo de aniversário
-            self.processar_aniversariantes_empresa(df_validos, df_duplicados)
+            self.processar_aniversariantes_empresa(df_validos, df_duplicados, cadastros_menos_6_meses, cadastros_mais_6_meses)
             # self.processar_aniversariantes_nascimento(df_validos)
 
         finally:

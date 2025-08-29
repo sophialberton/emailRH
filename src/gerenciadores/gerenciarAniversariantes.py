@@ -18,58 +18,31 @@ class gerenciadorAniversariantes:
         aniversariantes = []
 
         for cpf, grupo in df_duplicados.groupby('Cpf'):
-            grupo = grupo.dropna(subset=['Data_admissao']).drop_duplicates(subset=['Data_admissao', 'Data_demissao'])
             if grupo.empty:
                 continue
+            
+            grupo = grupo.sort_values('Data_admissao').reset_index(drop=True)
+            nome = grupo.iloc[-1]['Nome']
+            email = grupo.iloc[-1]['Email_pessoal']
+            primeira_admissao = grupo.iloc[0]['Data_admissao']
+
+            # ✅ Conversão segura para número
+            grupo['Tempo_FGM'] = pd.to_numeric(grupo['Tempo_FGM'], errors='coerce')
+            tempo_total_anos = round(grupo['Tempo_FGM'].sum())
+
 
             # --- PONTO 1: A DATA DE ANIVERSÁRIO É SEMPRE A PRIMEIRA ADMISSÃO ---
             # Independentemente de quantas vezes o colaborador saiu e voltou,
             # a data comemorativa será sempre baseada na sua entrada original na empresa.
-            primeira_admissao = grupo['Data_admissao'].min()
+            # primeira_admissao = grupo['Data_admissao'].min()
 
-            if primeira_admissao.month == mes_seguinte:
-                # --- PONTO 2: CÁLCULO PRECISO DO TEMPO TOTAL TRABALHADO ---
-                # Pega todos os períodos trabalhados (admissão -> demissão/data_atual)
-                periodos = sorted([
-                    (row['Data_admissao'], row['Data_demissao'] if pd.notnull(row['Data_demissao']) else data_referencia)
-                    for _, row in grupo.iterrows()
-                ])
-
-                if not periodos:
-                    continue
-
-                # --- LÓGICA DE MESCLAGEM DE PERÍODOS ---
-                # O objetivo é consolidar períodos que se sobrepõem ou se tocam
-                # (ex: demissão em 01/10 e readmissão em 01/10), para que os dias
-                # não sejam contados em duplicidade.
-                periodos_mesclados = [periodos[0]]
-                for i in range(1, len(periodos)):
-                    inicio_atual, fim_atual = periodos[i]
-                    inicio_ultimo, fim_ultimo = periodos_mesclados[-1]
-
-                    # Se o período atual começar antes ou no mesmo dia em que o último terminou,
-                    # eles são considerados contínuos ou sobrepostos.
-                    if inicio_atual <= fim_ultimo:
-                        # A mesclagem acontece aqui: o início do período consolidado é mantido
-                        # e o fim é estendido para a data de término mais recente.
-                        periodos_mesclados[-1] = (inicio_ultimo, max(fim_ultimo, fim_atual))
-                    else:
-                        # Se não há sobreposição, o período atual é adicionado como um novo item.
-                        periodos_mesclados.append((inicio_atual, fim_atual))
-                
-                # Após a mesclagem, a soma dos dias de cada período consolidado resulta no tempo total correto.
-                total_dias_trabalhados = sum(
-                    (fim - inicio).days for inicio, fim in periodos_mesclados
-                )
-                
-                anos_de_casa = total_dias_trabalhados // 365
-                if anos_de_casa >= 1:
-                    ultimo_registro = grupo.sort_values('Data_admissao').iloc[-1]
-                    aniversariantes.append({
-                        'Nome': ultimo_registro['Nome'],
+            if primeira_admissao.month == mes_seguinte and tempo_total_anos >= 1:
+                aniversariantes.append({
+                        'Cpf': cpf,
+                        'Nome': nome,
+                        'Email': email,
                         'Data_primeira_admissao': primeira_admissao,
-                        'Tempo_total_anos': anos_de_casa,
-                        'Retorno_em_menos_de_6_meses': grupo['Retorno_em_menos_de_6_meses'].iloc[0]
+                        'Tempo_total_anos': tempo_total_anos
                     })
         
         aniversariantes_df = pd.DataFrame(aniversariantes)

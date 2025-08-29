@@ -39,6 +39,8 @@ def classificar_usuarios(usuarios):
     - validos: Cadastro único e ativo, pronto para e-mails normais.
     - cadastros_duplicados: Colaborador readmitido, requer tratamento especial.
     - invalidos_*: Colaboradores que não devem receber e-mails (demitidos, sem e-mail, etc.).
+    - voltaram_menos_6_meses / voltaram_mais_6_meses: apenas o último registro por CPF.
+    - cadastros_menos_6_meses / cadastros_mais_6_meses: todos os registros por CPF.
     """
     logging.info("Classificando usuários...")
     usuarios = _preparar_dataframe(usuarios)
@@ -48,56 +50,87 @@ def classificar_usuarios(usuarios):
     invalidos_sem_email = []
     invalidos_sem_superior = []
     cadastros_duplicados = []
+    voltaram_menos_6_meses = []
+    voltaram_mais_6_meses = []
+    cadastros_menos_6_meses = []
+    cadastros_mais_6_meses = []
 
-    # Itera sobre os registros de cada CPF
     for _, grupo in usuarios.groupby('Cpf'):
-        # Regra de negócio específica para ignorar certos colaboradores/gestores
         if grupo['Nome'].str.contains("Mittelstadt", case=False).any() or \
            grupo['Superior'].str.contains("Bianca De Oliveira Luiz Mittelstadt", case=False, na=False).any():
             continue
 
-        # Ordena os registros pela data de admissão para analisar a linha do tempo do colaborador
         grupo = grupo.sort_values('Data_admissao').reset_index(drop=True)
         grupo_ativos = grupo[grupo['Situacao'] != 7]
-        
-        # --- LÓGICA DE CLASSIFICAÇÃO MAIS IMPORTANTE ---
-        # A ordem deste if/elif é CRUCIAL para a lógica funcionar.
-        # Primeiro, identificamos os casos mais complexos (readmitidos).
+        grupo_demitidos = grupo[grupo['Situacao'] == 7]
+        tem_multiplas_admissoes = len(grupo) > 1
+        tem_registro_ativo = not grupo_ativos.empty
 
-        # 1. (PRIORIDADE MÁXIMA) VERIFICA SE É UM CASO DE READMISSÃO
-        # Condição: Mais de um registro, um deles está ativo e pelo menos um está inativo (demitido).
-        if len(grupo) > 1 and not grupo_ativos.empty and any(grupo['Situacao'] == 7):
-            # Calcula o intervalo entre a última demissão e a nova admissão
-            demissao_anterior = grupo.loc[len(grupo) - 2, 'Data_demissao']
-            admissao_recente = grupo.loc[len(grupo) - 1, 'Data_admissao']
-            intervalo = (admissao_recente - demissao_anterior).days
-            grupo['Retorno_em_menos_de_6_meses'] = intervalo < 180
-            # Adiciona TODOS os registros do colaborador à lista de duplicados para cálculo posterior
+        # Lógica de duplicados com base em Tempo_FGM
+        if not grupo_ativos.empty:
+            data_admissao_ativa = grupo_ativos.iloc[0]['Data_admissao']
+            grupo_duplicado = grupo[(grupo['Data_admissao'] == data_admissao_ativa) & (grupo['Situacao'] == 7)]
+            grupo_sem_duplicados = grupo.drop(grupo_duplicado.index)
+
+            if not grupo_duplicado.empty:
+                invalidos_demitidos.append(grupo_duplicado)
+
+            grupo = grupo_sem_duplicados
+
+        # Lógica de readmissão
+        if tem_multiplas_admissoes and tem_registro_ativo and not grupo_demitidos.empty:
             cadastros_duplicados.append(grupo)
-        
-        # Se não for um caso de readmissão, o script continua para as classificações de inválidos ou válidos.
-        # 2. VERIFICA SE O COLABORADOR ESTÁ TOTALMENTE DESLIGADO
-        elif grupo['Situacao'].eq(7).all():
-            invalidos_demitidos.append(grupo)
-        # 3. VERIFICA SE FALTA E-MAIL (essencial para comunicação)
-        elif not grupo_ativos['Email_pessoal'].notnull().any():
-            invalidos_sem_email.append(grupo_ativos)
-        # 4. VERIFICA SE FALTA GESTOR (essencial para notificações)
-        elif not (grupo_ativos['Superior'].notnull() & (grupo_ativos['Situacao_superior'] != 7)).any():
-            invalidos_sem_superior.append(grupo_ativos)
-        # 5. SE PASSAR EM TODAS AS VERIFICAÇÕES, É VÁLIDO
-        else:
-            # Garante que apenas o registro mais recente e ativo seja considerado válido para os e-mails normais
-            registro_valido = grupo_ativos.sort_values('Data_admissao', ascending=False).iloc[[0]]
-            validos.append(registro_valido)
 
-    # Retorna um dicionário com os DataFrames resultantes de cada categoria
+            grupo_ordenado = grupo.reset_index(drop=True)
+            for i in range(1, len(grupo_ordenado)):
+                admissao_atual = grupo_ordenado.loc[i, 'Data_admissao']
+                demissao_anterior = grupo_ordenado.loc[i - 1, 'Data_demissao']
+                if pd.notnull(demissao_anterior) and pd.notnull(admissao_atual):
+                    intervalo = (admissao_atual - demissao_anterior).days
+                    destino_lista = (
+                        (voltaram_menos_6_meses, cadastros_menos_6_meses)
+                        if intervalo < 180
+                        else (voltaram_mais_6_meses, cadastros_mais_6_meses)
+                    )
+                    destino_lista[0].append(grupo_ordenado.iloc[-1])
+                    for _, row in grupo_ordenado.iterrows():
+                        if row['Data_admissao'] != row['Data_demissao']:
+                            destino_lista[1].append(row)
+                    break
+
+        todas_demitidas = grupo['Situacao'].eq(7).all()
+        tem_email_pessoal = grupo_ativos['Email_pessoal'].notnull().any()
+        grupo_ativos_com_superior = grupo_ativos[
+            grupo_ativos['Superior'].notnull() & (grupo_ativos['Situacao_superior'] != 7)
+        ]
+        tem_superior_valido = not grupo_ativos_com_superior.empty
+
+        if todas_demitidas:
+            invalidos_demitidos.append(grupo)
+        elif not tem_email_pessoal:
+            invalidos_sem_email.append(grupo_ativos)
+        elif not tem_superior_valido:
+            todos_superiores_demitidos = grupo_ativos['Situacao_superior'].eq(7).all()
+            if todos_superiores_demitidos:
+                grupo_corrigido = grupo_ativos.copy()
+                grupo_corrigido = grupo_corrigido.groupby('Cpf', as_index=False).first()
+                grupo_corrigido['Superior'] = "Posto de trabalho de superior não ocupado"
+                validos.append(grupo_corrigido)
+            else:
+                invalidos_sem_superior.append(grupo_ativos)
+        else:
+            validos.append(grupo_ativos_com_superior)
+
     return {
         'validos': pd.concat(validos, ignore_index=True) if validos else pd.DataFrame(),
         'invalidos_demitidos': pd.concat(invalidos_demitidos, ignore_index=True) if invalidos_demitidos else pd.DataFrame(),
         'invalidos_sem_email': pd.concat(invalidos_sem_email, ignore_index=True) if invalidos_sem_email else pd.DataFrame(),
         'invalidos_sem_superior': pd.concat(invalidos_sem_superior, ignore_index=True) if invalidos_sem_superior else pd.DataFrame(),
-        'cadastros_duplicados': pd.concat(cadastros_duplicados, ignore_index=True) if cadastros_duplicados else pd.DataFrame()
+        'cadastros_duplicados': pd.concat(cadastros_duplicados, ignore_index=True) if cadastros_duplicados else pd.DataFrame(),
+        'voltaram_menos_6_meses': pd.DataFrame(voltaram_menos_6_meses),
+        'voltaram_mais_6_meses': pd.DataFrame(voltaram_mais_6_meses),
+        'cadastros_menos_6_meses': pd.DataFrame(cadastros_menos_6_meses),
+        'cadastros_mais_6_meses': pd.DataFrame(cadastros_mais_6_meses)
     }
 
 def verificar_cpfs_repetidos(df):
