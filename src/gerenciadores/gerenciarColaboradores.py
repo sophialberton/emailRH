@@ -55,30 +55,23 @@ def classificar_usuarios(usuarios):
     cadastros_menos_6_meses = []
     cadastros_mais_6_meses = []
 
+    cpfs_readmitidos = set()
+
     for _, grupo in usuarios.groupby('Cpf'):
         if grupo['Nome'].str.contains("Mittelstadt", case=False).any() or \
            grupo['Superior'].str.contains("Bianca De Oliveira Luiz Mittelstadt", case=False, na=False).any():
             continue
 
-
-
         # Filtra registros ativos
         grupo_ativos = grupo[grupo['Situacao'] != 7]
-
         # Remove duplicados exatos de ativos com mesma admissão/demissão/CPF
         grupo_ativos_unicos = grupo_ativos.drop_duplicates(subset=['Cpf', 'Data_admissao', 'Data_demissao'])
-
         # Junta com os registros demitidos
         grupo_demitidos = grupo[grupo['Situacao'] == 7]
         grupo = pd.concat([grupo_demitidos, grupo_ativos_unicos]).sort_values('Data_admissao').reset_index(drop=True)
 
-        # grupo = grupo.sort_values('Data_admissao').reset_index(drop=True)
-        # grupo_ativos = grupo[grupo['Situacao'] != 7]
-        # grupo_demitidos = grupo[grupo['Situacao'] == 7]
-
         tem_multiplas_admissoes = len(grupo) > 1
         tem_registro_ativo = not grupo_ativos.empty
-
         # Lógica de duplicados com base em Tempo_FGM
         # Remove duplicados ativos com mesma admissão/demissão
         if not grupo_ativos.empty:
@@ -94,8 +87,6 @@ def classificar_usuarios(usuarios):
                 invalidos_demitidos.append(grupo_duplicado)
 
             grupo = grupo_sem_duplicados
-
-
         # Lógica de readmissão
         if tem_multiplas_admissoes and tem_registro_ativo and not grupo_demitidos.empty:
             cadastros_duplicados.append(grupo)
@@ -114,16 +105,19 @@ def classificar_usuarios(usuarios):
                         else (voltaram_mais_6_meses, cadastros_mais_6_meses)
                     )
 
-                    destino_lista[0].append(grupo_ordenado.iloc[i])  # último registro
-                    destino_lista[1].extend(grupo_ordenado.to_dict('records'))  # todos os registros
+                    destino_lista[0].append(grupo_ordenado.iloc[i])
+                    destino_lista[1].extend(grupo_ordenado.to_dict('records'))
+                    cpfs_readmitidos.add(cpf_atual)
                     break
-        
+
         todas_demitidas = grupo['Situacao'].eq(7).all()
         tem_email_pessoal = grupo_ativos['Email_pessoal'].notnull().any()
         grupo_ativos_com_superior = grupo_ativos[
             grupo_ativos['Superior'].notnull() & (grupo_ativos['Situacao_superior'] != 7)
         ]
         tem_superior_valido = not grupo_ativos_com_superior.empty
+
+        cpf_atual = grupo_ativos_com_superior['Cpf'].iloc[0] if not grupo_ativos_com_superior.empty else None
 
         if todas_demitidas:
             invalidos_demitidos.append(grupo)
@@ -135,11 +129,13 @@ def classificar_usuarios(usuarios):
                 grupo_corrigido = grupo_ativos.copy()
                 grupo_corrigido = grupo_corrigido.groupby('Cpf', as_index=False).first()
                 grupo_corrigido['Superior'] = "Posto de trabalho de superior não ocupado"
-                validos.append(grupo_corrigido)
+                if cpf_atual not in cpfs_readmitidos:
+                    validos.append(grupo_corrigido)
             else:
                 invalidos_sem_superior.append(grupo_ativos)
         else:
-            validos.append(grupo_ativos_com_superior)
+            if cpf_atual and cpf_atual not in cpfs_readmitidos:
+                validos.append(grupo_ativos_com_superior)
 
     return {
         'validos': pd.concat(validos, ignore_index=True) if validos else pd.DataFrame(),

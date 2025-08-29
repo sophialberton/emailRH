@@ -51,22 +51,29 @@ class gerenciadorAniversariantes:
 
     def identificar_aniversariantes_mes_seguinte(self, df_validos, data_simulada=None):
         """
-        [LÓGICA PADRÃO] Filtra o DataFrame de 'válidos' para encontrar aniversariantes
-        de tempo de casa no próximo mês. O cálculo aqui é simples (data_atual - admissão).
+        [LÓGICA ATUALIZADA] Filtra o DataFrame de 'válidos' para encontrar aniversariantes
+        de tempo de casa no próximo mês, considerando apenas a data de admissão mais antiga por CPF.
         """
         data_referencia = data_simulada or datetime.now()
         mes_seguinte = (data_referencia + relativedelta(months=1)).month
 
-        aniversariantes_df = df_validos[
-            pd.to_datetime(df_validos['Data_admissao']).dt.month == mes_seguinte
-        ].copy()
+        # Agrupa por CPF e pega a admissão mais antiga
+        df_validos['Data_admissao'] = pd.to_datetime(df_validos['Data_admissao'])
+        df_agrupado = df_validos.sort_values('Data_admissao').groupby('Cpf').first().reset_index()
 
+        # Filtra aniversariantes do mês seguinte
+        aniversariantes_df = df_agrupado[df_agrupado['Data_admissao'].dt.month == mes_seguinte].copy()
+
+        # Calcula anos de casa
         aniversariantes_df['Anos_de_casa'] = aniversariantes_df.apply(
             lambda row: (data_referencia - row['Data_admissao']).days // 365,
             axis=1
         )
+
+        # Filtra quem tem pelo menos 1 ano de casa
         aniversariantes_df = aniversariantes_df[aniversariantes_df['Anos_de_casa'] >= 1]
-        logging.info(f"Encontrados {len(aniversariantes_df)} aniversariantes (admissão única) para o próximo mês.")
+
+        logging.info(f"Encontrados {len(aniversariantes_df)} aniversariantes (admissão mais antiga) para o próximo mês.")
         return aniversariantes_df
 
     # ... (demais funções de identificação, que são mais diretas) ...
