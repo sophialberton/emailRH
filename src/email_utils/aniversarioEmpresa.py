@@ -47,19 +47,25 @@ class aniversarioEmpresa:
         def gerar_tabela(df, titulo):
             try:
                 if df.empty:
-                    return f"<p><strong>{titulo}:</strong> Nenhum colaborador encontrado.</p>"
+                    return f"&lt;p&gt;&lt;strong&gt;{titulo}:&lt;/strong&gt; Nenhum colaborador encontrado.&lt;/p&gt;"
                 df = df.copy()
                 df['DiaMes'] = df['Data_primeira_admissao'].dt.strftime('%m-%d')
                 df = df.sort_values(by='DiaMes')
                 dados_tabela = [
-                    [row['Nome'], row['Data_primeira_admissao'].strftime('%d/%m/%Y'), row['Tempo_total_anos']]
+                    [
+                        row['Nome'],
+                        row['Data_primeira_admissao'].strftime('%d/%m/%Y'),
+                        row['Tempo_total_anos'],
+                        row.get('Local', 'N/A'),
+                        row.get('Superior', 'N/A')
+                    ]
                     for _, row in df.iterrows()
                 ]
-                colunas_tabela = template["colunas"]
+                colunas_tabela = EMAIL_TEMPLATES["RH_ANIVERSARIANTES_EMPRESA"]["colunas"]
                 return self.utilitariosComuns.gerar_corpo_email_aniversariantes_duplicados(titulo, "", colunas_tabela, dados_tabela)
             except Exception as e:
                 logging.error(f"Erro ao gerar tabela para '{titulo}': {e}")
-                return f"<p><strong>{titulo}:</strong> Erro ao gerar tabela.</p>"
+                return f"&lt;p&gt;&lt;strong&gt;{titulo}:&lt;/strong&gt; Erro ao gerar tabela.&lt;/p&gt;"
 
         corpo_menos_6_meses = gerar_tabela(aniversariantes_df_menos_6_meses, "Lista dos que retornaram em menos de 6 meses fora")
         corpo_mais_6_meses = gerar_tabela(aniversariantes_df_mais_6_meses, "Lista dos que retornaram em mais de 6 meses fora")

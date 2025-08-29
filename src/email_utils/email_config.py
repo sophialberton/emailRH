@@ -17,7 +17,7 @@ EMAIL_TEMPLATES = {
         "assunto": "Aniversariantes de Tempo de Empresa Duplicados- {mes_seguinte}",
         "saudacao": "Olá,",
         "mensagem": "Segue a lista de colaboradores que fazem aniversário de tempo de empresa no mês de {mes_seguinte} que foram admitos mais de uma vez:",
-        "colunas": ["🎉 Nome", "📅 Data da Primeira Admissão", "🏢 Anos de Empresa"],
+        "colunas": ["🎉 Nome", "📅 Data da Primeira Admissão", "🏢 Anos de Empresa", "📍 Setor", "👤 Superior"],
     },
     "GESTOR_ANIVERSARIANTES_EMPRESA": {
         "assunto": "Aniversariantes de Tempo de Empresa da sua Equipe - {mes_seguinte}",
