@@ -82,7 +82,10 @@ class conexaoSenior:
                     FUN.DATADM AS "Data_admissao",
                     FUN.DATAFA AS "Data_demissao",
                     FUN.DATNAS AS "Data_nascimento",
-                    TO_CHAR(ROUND((SYSDATE - FUN.DATADM) / 365.25, 2)) AS "Tempo_FGM",
+                    TO_CHAR(ROUND((CASE 
+                    WHEN FUN.DATAFA = TO_DATE('1900-12-31', 'YYYY-MM-DD') THEN SYSDATE
+                    ELSE FUN.DATAFA
+                    END - FUN.DATADM ) / 365.25, 2)) AS "Tempo_FGM",
                     O.GESTOR AS "Superior",
                     EMG.EMACOM AS "Email_superior",
                     ORN.NOMLOC AS "Local",
