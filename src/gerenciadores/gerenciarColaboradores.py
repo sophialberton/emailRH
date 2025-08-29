@@ -60,16 +60,34 @@ def classificar_usuarios(usuarios):
            grupo['Superior'].str.contains("Bianca De Oliveira Luiz Mittelstadt", case=False, na=False).any():
             continue
 
-        grupo = grupo.sort_values('Data_admissao').reset_index(drop=True)
+
+
+        # Filtra registros ativos
         grupo_ativos = grupo[grupo['Situacao'] != 7]
+
+        # Remove duplicados exatos de ativos com mesma admissão/demissão/CPF
+        grupo_ativos_unicos = grupo_ativos.drop_duplicates(subset=['Cpf', 'Data_admissao', 'Data_demissao'])
+
+        # Junta com os registros demitidos
         grupo_demitidos = grupo[grupo['Situacao'] == 7]
+        grupo = pd.concat([grupo_demitidos, grupo_ativos_unicos]).sort_values('Data_admissao').reset_index(drop=True)
+
+        # grupo = grupo.sort_values('Data_admissao').reset_index(drop=True)
+        # grupo_ativos = grupo[grupo['Situacao'] != 7]
+        # grupo_demitidos = grupo[grupo['Situacao'] == 7]
+
         tem_multiplas_admissoes = len(grupo) > 1
         tem_registro_ativo = not grupo_ativos.empty
 
         # Lógica de duplicados com base em Tempo_FGM
+        # Remove duplicados ativos com mesma admissão/demissão
         if not grupo_ativos.empty:
             data_admissao_ativa = grupo_ativos.iloc[0]['Data_admissao']
-            grupo_duplicado = grupo[(grupo['Data_admissao'] == data_admissao_ativa) & (grupo['Situacao'] == 7)]
+            data_demissao_ativa = grupo_ativos.iloc[0]['Data_demissao']
+            grupo_duplicado = grupo[
+                (grupo['Data_admissao'] == data_admissao_ativa) &
+                (grupo['Data_demissao'] == data_demissao_ativa) &
+                (grupo['Situacao'] == 7)]
             grupo_sem_duplicados = grupo.drop(grupo_duplicado.index)
 
             if not grupo_duplicado.empty:
@@ -77,27 +95,29 @@ def classificar_usuarios(usuarios):
 
             grupo = grupo_sem_duplicados
 
+
         # Lógica de readmissão
         if tem_multiplas_admissoes and tem_registro_ativo and not grupo_demitidos.empty:
             cadastros_duplicados.append(grupo)
 
-            grupo_ordenado = grupo.reset_index(drop=True)
+            grupo_ordenado = grupo.sort_values('Data_admissao').reset_index(drop=True)
             for i in range(1, len(grupo_ordenado)):
                 admissao_atual = grupo_ordenado.loc[i, 'Data_admissao']
                 demissao_anterior = grupo_ordenado.loc[i - 1, 'Data_demissao']
-                if pd.notnull(demissao_anterior) and pd.notnull(admissao_atual):
+                cpf_atual = grupo_ordenado.loc[i, 'Cpf']
+                cpf_anterior = grupo_ordenado.loc[i - 1, 'Cpf']
+                if pd.notnull(demissao_anterior) and pd.notnull(admissao_atual) and cpf_atual == cpf_anterior:
                     intervalo = (admissao_atual - demissao_anterior).days
                     destino_lista = (
                         (voltaram_menos_6_meses, cadastros_menos_6_meses)
                         if intervalo < 180
                         else (voltaram_mais_6_meses, cadastros_mais_6_meses)
                     )
-                    destino_lista[0].append(grupo_ordenado.iloc[-1])
-                    for _, row in grupo_ordenado.iterrows():
-                        if row['Data_admissao'] != row['Data_demissao']:
-                            destino_lista[1].append(row)
-                    break
 
+                    destino_lista[0].append(grupo_ordenado.iloc[i])  # último registro
+                    destino_lista[1].extend(grupo_ordenado.to_dict('records'))  # todos os registros
+                    break
+        
         todas_demitidas = grupo['Situacao'].eq(7).all()
         tem_email_pessoal = grupo_ativos['Email_pessoal'].notnull().any()
         grupo_ativos_com_superior = grupo_ativos[

@@ -24,7 +24,7 @@ from utils.config import dict_extract
 # Para testar o comportamento do script em uma data específica,
 # descomente a linha abaixo e defina a data desejada.
 # Se 'data_simulada' for None, o script usará a data atual.
-data_simulada = datetime.strptime("01/04/2025", "%d/%m/%Y")
+data_simulada = datetime.strptime("01/05/2025", "%d/%m/%Y")
 # data_simulada = None
 
 def configurar_logs():
