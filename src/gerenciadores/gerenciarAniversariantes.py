@@ -31,6 +31,8 @@ class gerenciadorAniversariantes:
 
             nome = grupo.iloc[-1]['Nome']
             email = grupo.iloc[-1]['Email_pessoal']
+            local = grupo.iloc[-1]['Local']
+            superior = grupo.iloc[-1]['Superior']
             primeira_admissao = grupo.iloc[0]['Data_admissao']
             tempo_total_anos = round(grupo['Tempo_FGM'].sum())
 
@@ -46,7 +48,9 @@ class gerenciadorAniversariantes:
                         'Nome': nome,
                         'Email': email,
                         'Data_primeira_admissao': primeira_admissao,
-                        'Tempo_total_anos': tempo_total_anos
+                        'Tempo_total_anos': tempo_total_anos,
+                        'Local': local,
+                        'Superior': superior
                     })
         
         aniversariantes_df = pd.DataFrame(aniversariantes)
