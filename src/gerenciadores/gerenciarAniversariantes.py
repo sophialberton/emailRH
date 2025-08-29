@@ -21,13 +21,17 @@ class gerenciadorAniversariantes:
             if grupo.empty:
                 continue
             
-            grupo = grupo.sort_values('Data_admissao').reset_index(drop=True)
+            
+            grupo['Data_admissao'] = pd.to_datetime(grupo['Data_admissao'])
+            grupo['Tempo_FGM'] = pd.to_numeric(grupo['Tempo_FGM'], errors='coerce')
+
+            # ✅ Remove registros com mesma data de admissão, mantendo o ativo
+            grupo = grupo.sort_values(['Data_admissao', 'Situacao'], ascending=[True, True])
+            grupo = grupo.drop_duplicates(subset=['Data_admissao'], keep='first').reset_index(drop=True)
+
             nome = grupo.iloc[-1]['Nome']
             email = grupo.iloc[-1]['Email_pessoal']
             primeira_admissao = grupo.iloc[0]['Data_admissao']
-
-            # ✅ Conversão segura para número
-            grupo['Tempo_FGM'] = pd.to_numeric(grupo['Tempo_FGM'], errors='coerce')
             tempo_total_anos = round(grupo['Tempo_FGM'].sum())
 
 

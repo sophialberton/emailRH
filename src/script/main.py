@@ -24,8 +24,8 @@ from utils.config import dict_extract
 # Para testar o comportamento do script em uma data específica,
 # descomente a linha abaixo e defina a data desejada.
 # Se 'data_simulada' for None, o script usará a data atual.
-# data_simulada = datetime.strptime("06/06/2025", "%d/%m/%Y")
-data_simulada = None
+data_simulada = datetime.strptime("01/05/2026", "%d/%m/%Y")
+# data_simulada = None
 
 def configurar_logs():
     """Configura o sistema de logging para registrar as operações em um arquivo e no console."""
@@ -72,7 +72,7 @@ class Main:
         # --- LÓGICA MENSAL PARA COLABORADORES COM CADASTRO ÚNICO ---
         aniversariantes_mes_seguinte_df = self.gerenciador_aniversariantes.identificar_aniversariantes_mes_seguinte(df_validos, self.data_referencia)
         self.email_empresa.enviar_email_rh_aniversariante_empresa(aniversariantes_mes_seguinte_df, self.data_referencia) # E-mail para o RH
-        self.email_empresa.enviar_emails_gestores_aniversariante_empresa(aniversariantes_mes_seguinte_df, self.data_referencia) # E-mails para Gestores
+        # self.email_empresa.enviar_emails_gestores_aniversariante_empresa(aniversariantes_mes_seguinte_df, self.data_referencia) # E-mails para Gestores
         
         # --- LÓGICA DIÁRIA (E-MAILS DE PARABÉNS) ---
         aniversariantes_do_dia_df = self.gerenciador_aniversariantes.identificar_aniversariantes_do_dia(df_validos, self.data_referencia)
@@ -83,9 +83,9 @@ class Main:
         aniversariantes_normais_df = aniversariantes_do_dia_df[~aniversariantes_do_dia_df['Anos_de_casa'].isin(anos_star)]
 
         # Envia os e-mails individuais e a notificação diária para os gestores
-        self.email_empresa.enviar_email_individual_aniversariante_empresa_star(aniversariantes_star_df, self.data_referencia)
-        self.email_empresa.enviar_email_individual_aniversariante_empresa(aniversariantes_normais_df, self.data_referencia)
-        self.email_empresa.enviar_email_diario_gestor_aniversariante_empresa(aniversariantes_do_dia_df, self.data_referencia)
+        # self.email_empresa.enviar_email_individual_aniversariante_empresa_star(aniversariantes_star_df, self.data_referencia)
+        # self.email_empresa.enviar_email_individual_aniversariante_empresa(aniversariantes_normais_df, self.data_referencia)
+        # self.email_empresa.enviar_email_diario_gestor_aniversariante_empresa(aniversariantes_do_dia_df, self.data_referencia)
 
     def processar_aniversariantes_nascimento(self, df_validos):
         """Método focado em todo o fluxo de aniversários de nascimento."""
